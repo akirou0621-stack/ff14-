@@ -47,14 +47,8 @@ const TAG_GROUPS: { title: string; tags: string[] }[] = [
 const splitTags = (text: string) => text.split(/\s+/).map((t) => t.replace(/^#+/, '')).filter(Boolean);
 const joinTags = (tags: string[]) => tags.map((t) => `#${t}`).join(' ');
 
-/** 上半分の文字のフォント（どれも Google Fonts の無料フォント。日本語はしっぽり明朝になる） */
-const TOP_FONTS: { id: string; name: string; family: string }[] = [
-  { id: 'playfair', name: 'Playfair Display（雑誌の表紙風・おすすめ）', family: "'Playfair Display'" },
-  { id: 'didot', name: 'GFS Didot（Didot系・上品）', family: "'GFS Didot'" },
-  { id: 'bodoni', name: 'Bodoni Moda（細めでクラシック）', family: "'Bodoni Moda'" },
-  { id: 'cormorant', name: 'Cormorant Garamond（やわらかい）', family: "'Cormorant Garamond'" }
-];
-const fontFamilyOf = (id: string) => (TOP_FONTS.find((f) => f.id === id) ?? TOP_FONTS[0]).family;
+/** 上半分の文字のフォント（固定。雑誌の表紙風。日本語はしっぽり明朝になる） */
+const TOP_FONT = "'Playfair Display', 'Shippori Mincho', serif";
 
 /** 下半分の色の候補 */
 const BASE_PALETTE: { name: string; color: string }[] = [
@@ -108,7 +102,6 @@ const BG_ASPECT = 1024 / 585;
 type Look = {
   veil: number; // 文字の後ろの白い背景の濃さ
   base: string; // 下半分の色
-  font: string; // 上半分の文字のフォント（TOP_FONTS の id）
 };
 
 const INITIAL_PROFILE: Profile = {
@@ -130,7 +123,7 @@ const INITIAL_LEVELS: JobLevels = {
 };
 
 const INITIAL_IMAGES: Images = { main: null, portraits: [null, null, null] };
-const INITIAL_LOOK: Look = { veil: 0.5, base: '#86a2c0', font: 'playfair' };
+const INITIAL_LOOK: Look = { veil: 0.5, base: '#86a2c0' };
 const emptyHours = () => Array<boolean>(24).fill(false);
 const hoursFrom = (list: number[]) => Array.from({ length: 24 }, (_, h) => list.includes(h));
 
@@ -503,12 +496,6 @@ export default function Home() {
                   onClear={() => putImage(i, null)} />
               ))}
             </div>
-            <label className="field" htmlFor="topfont">
-              <span>上半分の文字のフォント</span>
-              <select id="topfont" value={look.font} onChange={(e) => updateLook('font', e.target.value)}>
-                {TOP_FONTS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-            </label>
             <Range id="veil" label="文字の後ろの白い背景（右ほど濃い）" min={0} max={0.9} step={0.01} value={look.veil} onChange={(v) => updateLook('veil', v)} />
             <div className="field">
               <span>下半分の色</span>
@@ -589,14 +576,14 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
 
   // はみ出すときだけ文字を小さくする
   // 名前：1行で横幅に収まるまで／ハッシュタグ：決まった高さに収まるまで
-  const nameRef = useFitText<HTMLDivElement>(profile.characterName + look.font, 104, 28, (el) => el.scrollWidth > el.clientWidth);
-  const tagsRef = useFitText<HTMLDivElement>(profile.hashtags + look.font, 22, 10, (el) => el.scrollHeight > el.clientHeight);
+  const nameRef = useFitText<HTMLDivElement>(profile.characterName, 104, 28, (el) => el.scrollWidth > el.clientWidth);
+  const tagsRef = useFitText<HTMLDivElement>(profile.hashtags, 22, 10, (el) => el.scrollHeight > el.clientHeight);
 
   return (
     <div
       ref={ref}
       className="card"
-      style={{ '--base': look.base, '--card-display': `${fontFamilyOf(look.font)}, 'Shippori Mincho', serif` } as React.CSSProperties}
+      style={{ '--base': look.base, '--card-display': TOP_FONT } as React.CSSProperties}
     >
       <div className="card-top">
         {images.main ? (
