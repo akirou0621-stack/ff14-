@@ -123,27 +123,45 @@ button, .ghost { cursor: pointer; }
 .status.error { color: var(--error); }
 
 /* 「調べ方」の折りたたみ説明 */
-.help { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13px; }
+.help { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13px; display: flex; flex-direction: column; }
 .help summary { cursor: pointer; color: var(--accent); font-weight: 700; font-size: 13px; }
-.help ol { margin: 10px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; line-height: 1.6; }
+.help[open] summary { margin-bottom: 10px; }
 .help a { color: var(--accent); }
-.addr {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #2b313b;
-  color: #e7ebf1;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  font-size: 13px;
-  overflow-x: auto;
+.help-lead { margin: 0 0 12px; line-height: 1.7; border-left: 3px solid var(--line); padding-left: 10px; }
+
+/* ブラウザ画面の見本 */
+.browser { background: #1e2229; border-radius: 8px; overflow: hidden; position: relative; margin-bottom: 10px; max-width: 460px; }
+.browser-tabs { display: flex; align-items: center; gap: 12px; padding: 8px 10px 0; }
+.browser-dots { display: flex; gap: 6px; }
+.browser-dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.browser-dots i:nth-child(2) { background: #febc2e; }
+.browser-dots i:nth-child(3) { background: #28c840; }
+.browser-tab {
+  background: #2f3540;
+  color: #d6dbe3;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px 6px 0 0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
-.addr-lock { font-size: 11px; opacity: 0.7; }
-.addr mark { background: transparent; color: #ffb4b4; outline: 2px solid #e5484d; outline-offset: 2px; border-radius: 2px; }
-.addr-note { margin: 6px 0 0; font-size: 12px; color: #c4434b; font-weight: 700; }
+.browser-bar { background: #2f3540; padding: 8px 10px; }
+.browser-url {
+  display: block;
+  background: #1a1d23;
+  color: #c9ced6;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+.browser-url mark { background: transparent; color: #fff; outline: 2.5px solid #ff3b30; outline-offset: 2px; }
+.browser-callout { position: absolute; right: 14px; top: 86px; color: #ff3b30; font-weight: 800; font-size: 18px; text-shadow: 0 1px 0 #fff, 0 0 4px #fff; }
+.browser-page { background: #f2f3f5; color: #555; font-size: 11px; display: flex; gap: 6px; padding: 26px 12px 10px; }
 
 .image-input { display: flex; gap: 6px; flex-wrap: wrap; }
 

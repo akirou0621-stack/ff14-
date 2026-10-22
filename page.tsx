@@ -51,7 +51,7 @@ type Profile = {
 };
 
 type Images = {
-  main: string; // 上半分の一枚絵
+  main: string; // 上半分の背景画像
   portraits: [string, string, string];
 };
 
@@ -207,11 +207,8 @@ export default function Home() {
       }));
       setLevels({ ...emptyLevels(), ...d.levels });
 
-      // 画像は「まだ自分で入れていない枠」にだけ入れる（全身画像は上半分の一枚絵に）
+      // 顔アイコンは、まだ自分で入れていなければ丸アイコン1に入れる（上半分の背景は自分で選ぶ）
       const imageTasks: Promise<void>[] = [];
-      if (d.portrait && !images.main) {
-        imageTasks.push(lodestoneImageToData(d.portrait).then((data) => setImages((p) => ({ ...p, main: data }))));
-      }
       if (d.face && !images.portraits[0]) {
         imageTasks.push(
           lodestoneImageToData(d.face).then((data) =>
@@ -347,12 +344,12 @@ export default function Home() {
 
           <section className="box">
             <h2>画像</h2>
-            <ImageInput id="img-main" label="上半分の画像（一枚絵）" has={!!images.main}
+            <ImageInput id="img-main" label="背景画像（上半分）" has={!!images.main}
               onPick={(e) => upload(e, 'main')} onClear={() => setImages((p) => ({ ...p, main: '' }))} />
             <div className="grid3">
-              <Range id="zoom" label="画像 拡大" min={1} max={3} step={0.01} value={look.zoom} onChange={(v) => updateLook('zoom', v)} />
-              <Range id="posx" label="画像 左右" min={0} max={100} step={1} value={look.posX} onChange={(v) => updateLook('posX', v)} />
-              <Range id="posy" label="画像 上下" min={0} max={100} step={1} value={look.posY} onChange={(v) => updateLook('posY', v)} />
+              <Range id="zoom" label="背景 拡大" min={1} max={3} step={0.01} value={look.zoom} onChange={(v) => updateLook('zoom', v)} />
+              <Range id="posx" label="背景 左右" min={0} max={100} step={1} value={look.posX} onChange={(v) => updateLook('posX', v)} />
+              <Range id="posy" label="背景 上下" min={0} max={100} step={1} value={look.posY} onChange={(v) => updateLook('posY', v)} />
             </div>
             <div className="grid3">
               {([0, 1, 2] as const).map((i) => (
@@ -448,7 +445,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
           />
         ) : (
           <div className="cover placeholder-bg">
-            <span>上半分の画像</span>
+            <span>背景画像</span>
           </div>
         )}
         <div className="card-veil" style={{ background: `rgba(255,255,255,${look.veil})` }} />
@@ -560,25 +557,30 @@ function LodestoneHelp() {
   return (
     <details className="help">
       <summary>ロドストのURL・IDの調べ方</summary>
-      <ol>
-        <li>
-          <a href="https://jp.finalfantasyxiv.com/lodestone/" target="_blank" rel="noreferrer">ロドスト</a>
-          にログインして、上のメニューの「マイページ」から自分のキャラクターのページを開きます。
-        </li>
-        <li>
-          ログインしない場合は、
-          <a href="https://jp.finalfantasyxiv.com/lodestone/character/" target="_blank" rel="noreferrer">キャラクター検索</a>
-          でキャラクター名とワールドを入れて探し、自分のキャラを開いてもOKです。
-        </li>
-        <li>ブラウザのアドレス欄のURLをそのままコピーして、上の入力欄に貼り付けます。末尾の数字（キャラクターID）だけでも読み込めます。</li>
-      </ol>
-      <div className="addr" aria-label="アドレス欄の見本">
-        <span className="addr-lock" aria-hidden="true">🔒</span>
-        <span className="addr-url">
-          jp.finalfantasyxiv.com/lodestone/character/<mark>12345678</mark>/
-        </span>
+      <p className="help-lead">
+        <a href="https://jp.finalfantasyxiv.com/lodestone/" target="_blank" rel="noreferrer">ロドスト</a>
+        を開き、ログインして「マイページ」から自分のキャラクターのページへ進みます。ページのURLをコピーして、上の入力欄に貼り付けてください。URL末尾の数字（キャラクターID）だけでも読み込めます。
+      </p>
+      <div className="browser" aria-label="キャラクターページを開いたときのブラウザの見本">
+        <div className="browser-tabs">
+          <span className="browser-dots" aria-hidden="true"><i /><i /><i /></span>
+          <span className="browser-tab">キャラクター名 | FINAL FANTASY XIV</span>
+        </div>
+        <div className="browser-bar">
+          <span className="browser-url">
+            jp.finalfantasyxiv.com/lodestone/character/<mark>12345678/</mark>
+          </span>
+        </div>
+        <div className="browser-callout">ここの数字</div>
+        <div className="browser-page" aria-hidden="true">
+          <span>マイページ</span><span>›</span><span>マイキャラクター</span>
+        </div>
       </div>
-      <p className="addr-note">↑ 赤枠の数字がキャラクターIDです</p>
+      <p className="hint">
+        ログインしない場合は、
+        <a href="https://jp.finalfantasyxiv.com/lodestone/character/" target="_blank" rel="noreferrer">キャラクター検索</a>
+        でキャラクター名とワールドを入れて探し、自分のキャラのページを開いてもOKです。
+      </p>
     </details>
   );
 }
