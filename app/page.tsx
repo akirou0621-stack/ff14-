@@ -5,6 +5,34 @@ import { toPng } from 'html-to-image';
 import { COMBAT_JOBS, OTHER_JOBS, capOf, emptyLevels, type JobDef, type JobLevels } from '@/lib/jobs';
 
 const STORAGE_KEY = 'ffxiv-card-generator-v2';
+
+/** 始めたパッチの選択肢（拡張ごとにまとめる）。新しいパッチが来たらここに足す */
+const PATCH_GROUPS: { title: string; patches: string[] }[] = [
+  { title: '黄金のレガシー', patches: ['7.0', '7.1', '7.2', '7.3', '7.4', '7.5'] },
+  { title: '暁月のフィナーレ', patches: ['6.0', '6.1', '6.2', '6.3', '6.4', '6.5'] },
+  { title: '漆黒のヴィランズ', patches: ['5.0', '5.1', '5.2', '5.3', '5.4', '5.5'] },
+  { title: '紅蓮のリベレーター', patches: ['4.0', '4.1', '4.2', '4.3', '4.4', '4.5'] },
+  { title: '蒼天のイシュガルド', patches: ['3.0', '3.1', '3.2', '3.3', '3.4', '3.5'] },
+  { title: '新生エオルゼア', patches: ['2.0', '2.1', '2.2', '2.3', '2.4', '2.5'] }
+];
+const PATCH_OPTIONS = PATCH_GROUPS.flatMap((g) => g.patches.map((p) => `${p} ${g.title}`));
+const LEGACY_PATCH = '旧FF14（1.x）';
+
+/** 下半分の色の候補 */
+const BASE_PALETTE: { name: string; color: string }[] = [
+  { name: 'くすみブルー', color: '#86a2c0' },
+  { name: 'ミストブルー', color: '#a3b9cc' },
+  { name: 'ネイビーグレー', color: '#6b7a99' },
+  { name: 'ティール', color: '#7fa3a0' },
+  { name: 'セージ', color: '#9db8a8' },
+  { name: 'ラベンダー', color: '#b5a1d0' },
+  { name: 'モーヴ', color: '#c9a9c6' },
+  { name: 'ローズ', color: '#d9a7b6' },
+  { name: 'ベージュ', color: '#c8b49a' },
+  { name: 'モカ', color: '#a68a72' },
+  { name: 'グレージュ', color: '#9a958f' },
+  { name: 'チャコール', color: '#4f5663' }
+];
 const CARD_W = 1024;
 const CARD_H = 1156;
 
@@ -23,16 +51,15 @@ type Profile = {
 };
 
 type Images = {
-  background: string;
-  main: string;
+  main: string; // 上半分の一枚絵
   portraits: [string, string, string];
 };
 
 type Look = {
-  veil: number; // 左側の白さ
+  veil: number; // 文字の後ろの白い背景の濃さ
   base: string; // 下半分の色
-  zoom: number; // キャラ画像の拡大
-  posX: number; // キャラ画像の位置 0-100
+  zoom: number; // 一枚絵の拡大
+  posX: number; // 一枚絵の位置 0-100
   posY: number;
 };
 
@@ -55,8 +82,8 @@ const INITIAL_LEVELS: JobLevels = {
   pld: 100, whm: 100, sch: 92, dnc: 100, rdm: 88, blu: 80, cul: 100, fsh: 74
 };
 
-const INITIAL_IMAGES: Images = { background: '', main: '', portraits: ['', '', ''] };
-const INITIAL_LOOK: Look = { veil: 0.42, base: '#86a2c0', zoom: 1, posX: 50, posY: 50 };
+const INITIAL_IMAGES: Images = { main: '', portraits: ['', '', ''] };
+const INITIAL_LOOK: Look = { veil: 0.5, base: '#86a2c0', zoom: 1, posX: 50, posY: 50 };
 const emptyHours = () => Array<boolean>(24).fill(false);
 const hoursFrom = (list: number[]) => Array.from({ length: 24 }, (_, h) => list.includes(h));
 
@@ -109,7 +136,7 @@ export default function Home() {
         if (saved.weekday) setWeekday(saved.weekday);
         if (saved.holiday) setHoliday(saved.holiday);
         if (saved.look) setLook({ ...INITIAL_LOOK, ...saved.look });
-        if (saved.images) setImages({ ...INITIAL_IMAGES, ...saved.images });
+        if (saved.images) setImages({ main: saved.images.main ?? '', portraits: saved.images.portraits ?? ['', '', ''] });
       }
     } catch {
       /* 壊れていたら初期値のまま */
@@ -142,7 +169,7 @@ export default function Home() {
     setLevels((prev) => ({ ...prev, [id]: Number.isFinite(n) && n > 0 ? Math.min(n, 999) : null }));
   };
 
-  const upload = async (e: React.ChangeEvent<HTMLInputElement>, slot: 'background' | 'main' | 0 | 1 | 2) => {
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>, slot: 'main' | 0 | 1 | 2) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -180,7 +207,7 @@ export default function Home() {
       }));
       setLevels({ ...emptyLevels(), ...d.levels });
 
-      // 画像は「まだ自分で入れていない枠」にだけ入れる
+      // 画像は「まだ自分で入れていない枠」にだけ入れる（全身画像は上半分の一枚絵に）
       const imageTasks: Promise<void>[] = [];
       if (d.portrait && !images.main) {
         imageTasks.push(lodestoneImageToData(d.portrait).then((data) => setImages((p) => ({ ...p, main: data }))));
@@ -264,6 +291,7 @@ export default function Home() {
               </button>
             </div>
             <p className={`status ${status.type}`}>{status.message}</p>
+            <LodestoneHelp />
           </section>
 
           <section className="box">
@@ -294,23 +322,37 @@ export default function Home() {
 
           <section className="box">
             <h2>Patch / PLAY time</h2>
-            <Field id="patch" label="始めたパッチ" value={profile.patch} onChange={(v) => update('patch', v)} />
+            <label className="field" htmlFor="patch">
+              <span>始めたパッチ</span>
+              <select id="patch" value={profile.patch} onChange={(e) => update('patch', e.target.value)}>
+                <option value="">（表示しない）</option>
+                {profile.patch && profile.patch !== LEGACY_PATCH && !PATCH_OPTIONS.includes(profile.patch) && (
+                  <option value={profile.patch}>{profile.patch}</option>
+                )}
+                {PATCH_GROUPS.map((g) => (
+                  <optgroup key={g.title} label={g.title}>
+                    {g.patches.map((p) => (
+                      <option key={p} value={`${p} ${g.title}`}>{`${p} ${g.title}`}</option>
+                    ))}
+                  </optgroup>
+                ))}
+                <optgroup label="それより前">
+                  <option value={LEGACY_PATCH}>{LEGACY_PATCH}</option>
+                </optgroup>
+              </select>
+            </label>
             <p className="hint">遊ぶ時間帯をなぞって塗ってください。塗ったマスをなぞると消えます。</p>
             <HourPicker rows={[['平日', weekday, setWeekday], ['休日', holiday, setHoliday]]} />
           </section>
 
           <section className="box">
             <h2>画像</h2>
-            <div className="grid2">
-              <ImageInput id="img-bg" label="背景（上半分）" has={!!images.background}
-                onPick={(e) => upload(e, 'background')} onClear={() => setImages((p) => ({ ...p, background: '' }))} />
-              <ImageInput id="img-main" label="キャラ画像（右上）" has={!!images.main}
-                onPick={(e) => upload(e, 'main')} onClear={() => setImages((p) => ({ ...p, main: '' }))} />
-            </div>
+            <ImageInput id="img-main" label="上半分の画像（一枚絵）" has={!!images.main}
+              onPick={(e) => upload(e, 'main')} onClear={() => setImages((p) => ({ ...p, main: '' }))} />
             <div className="grid3">
-              <Range id="zoom" label="キャラ 拡大" min={1} max={3} step={0.01} value={look.zoom} onChange={(v) => updateLook('zoom', v)} />
-              <Range id="posx" label="キャラ 左右" min={0} max={100} step={1} value={look.posX} onChange={(v) => updateLook('posX', v)} />
-              <Range id="posy" label="キャラ 上下" min={0} max={100} step={1} value={look.posY} onChange={(v) => updateLook('posY', v)} />
+              <Range id="zoom" label="画像 拡大" min={1} max={3} step={0.01} value={look.zoom} onChange={(v) => updateLook('zoom', v)} />
+              <Range id="posx" label="画像 左右" min={0} max={100} step={1} value={look.posX} onChange={(v) => updateLook('posX', v)} />
+              <Range id="posy" label="画像 上下" min={0} max={100} step={1} value={look.posY} onChange={(v) => updateLook('posY', v)} />
             </div>
             <div className="grid3">
               {([0, 1, 2] as const).map((i) => (
@@ -323,12 +365,27 @@ export default function Home() {
                   })} />
               ))}
             </div>
-            <div className="grid2">
-              <Range id="veil" label="左側の白さ" min={0} max={0.85} step={0.01} value={look.veil} onChange={(v) => updateLook('veil', v)} />
-              <label className="field" htmlFor="base">
-                <span>下半分の色</span>
-                <input id="base" type="color" value={look.base} onChange={(e) => updateLook('base', e.target.value)} />
-              </label>
+            <Range id="veil" label="文字の後ろの白い背景（右ほど濃い）" min={0} max={0.9} step={0.01} value={look.veil} onChange={(v) => updateLook('veil', v)} />
+            <div className="field">
+              <span>下半分の色</span>
+              <div className="palette" role="radiogroup" aria-label="下半分の色">
+                {BASE_PALETTE.map((c) => (
+                  <button
+                    key={c.color}
+                    type="button"
+                    role="radio"
+                    aria-checked={look.base.toLowerCase() === c.color}
+                    aria-label={c.name}
+                    title={c.name}
+                    className="swatch"
+                    style={{ background: c.color }}
+                    onClick={() => updateLook('base', c.color)}
+                  />
+                ))}
+                <label className="swatch custom" title="自分で選ぶ" htmlFor="base">
+                  <input id="base" type="color" value={look.base} onChange={(e) => updateLook('base', e.target.value)} />
+                </label>
+              </div>
             </div>
             {storageNote && <p className="hint warn">{storageNote}</p>}
           </section>
@@ -378,22 +435,22 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
   return (
     <div ref={ref} className="card" style={{ '--base': look.base } as React.CSSProperties}>
       <div className="card-top">
-        {images.background ? <img className="cover" src={images.background} alt="" /> : <div className="cover placeholder-bg" />}
-        <div className="card-char">
-          {images.main ? (
-            <img
-              src={images.main}
-              alt=""
-              style={{
-                objectPosition: `${look.posX}% ${look.posY}%`,
-                transform: `scale(${look.zoom})`,
-                transformOrigin: `${look.posX}% ${look.posY}%`
-              }}
-            />
-          ) : (
-            <div className="placeholder-char">キャラ画像</div>
-          )}
-        </div>
+        {images.main ? (
+          <img
+            className="cover"
+            src={images.main}
+            alt=""
+            style={{
+              objectPosition: `${look.posX}% ${look.posY}%`,
+              transform: `scale(${look.zoom})`,
+              transformOrigin: `${look.posX}% ${look.posY}%`
+            }}
+          />
+        ) : (
+          <div className="cover placeholder-bg">
+            <span>上半分の画像</span>
+          </div>
+        )}
         <div className="card-veil" style={{ background: `rgba(255,255,255,${look.veil})` }} />
         <div className="card-text">
           <div className="c-name" style={{ fontSize: nameSize }}>{profile.characterName}</div>
@@ -497,6 +554,34 @@ function ScaledCard({ children }: { children: React.ReactNode }) {
 }
 
 /* ============================== 入力部品 ============================== */
+
+/** 「ロドストのURL・IDの調べ方」の折りたたみ説明 */
+function LodestoneHelp() {
+  return (
+    <details className="help">
+      <summary>ロドストのURL・IDの調べ方</summary>
+      <ol>
+        <li>
+          <a href="https://jp.finalfantasyxiv.com/lodestone/" target="_blank" rel="noreferrer">ロドスト</a>
+          にログインして、上のメニューの「マイページ」から自分のキャラクターのページを開きます。
+        </li>
+        <li>
+          ログインしない場合は、
+          <a href="https://jp.finalfantasyxiv.com/lodestone/character/" target="_blank" rel="noreferrer">キャラクター検索</a>
+          でキャラクター名とワールドを入れて探し、自分のキャラを開いてもOKです。
+        </li>
+        <li>ブラウザのアドレス欄のURLをそのままコピーして、上の入力欄に貼り付けます。末尾の数字（キャラクターID）だけでも読み込めます。</li>
+      </ol>
+      <div className="addr" aria-label="アドレス欄の見本">
+        <span className="addr-lock" aria-hidden="true">🔒</span>
+        <span className="addr-url">
+          jp.finalfantasyxiv.com/lodestone/character/<mark>12345678</mark>/
+        </span>
+      </div>
+      <p className="addr-note">↑ 赤枠の数字がキャラクターIDです</p>
+    </details>
+  );
+}
 
 function Field({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
   return (
