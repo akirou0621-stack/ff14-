@@ -5,47 +5,48 @@
 export type JobDef = {
   id: string;
   label: string; // 画面に出す日本語名
+  en: string; // カードに出す英語名
   names: string[]; // ロドスト上の表記（日本語・英語・クラス名）
 };
 
 export const COMBAT_JOBS: JobDef[] = [
-  { id: 'pld', label: 'ナイト', names: ['ナイト', '剣術士', 'Paladin', 'Gladiator'] },
-  { id: 'war', label: '戦士', names: ['戦士', '斧術士', 'Warrior', 'Marauder'] },
-  { id: 'drk', label: '暗黒騎士', names: ['暗黒騎士', 'Dark Knight'] },
-  { id: 'gnb', label: 'ガンブレイカー', names: ['ガンブレイカー', 'Gunbreaker'] },
-  { id: 'whm', label: '白魔道士', names: ['白魔道士', '幻術士', 'White Mage', 'Conjurer'] },
-  { id: 'sch', label: '学者', names: ['学者', 'Scholar'] },
-  { id: 'ast', label: '占星術師', names: ['占星術師', 'Astrologian'] },
-  { id: 'sge', label: '賢者', names: ['賢者', 'Sage'] },
-  { id: 'mnk', label: 'モンク', names: ['モンク', '格闘士', 'Monk', 'Pugilist'] },
-  { id: 'drg', label: '竜騎士', names: ['竜騎士', '槍術士', 'Dragoon', 'Lancer'] },
-  { id: 'nin', label: '忍者', names: ['忍者', '双剣士', 'Ninja', 'Rogue'] },
-  { id: 'sam', label: '侍', names: ['侍', 'Samurai'] },
-  { id: 'rpr', label: 'リーパー', names: ['リーパー', 'Reaper'] },
-  { id: 'vpr', label: 'ヴァイパー', names: ['ヴァイパー', 'Viper'] },
-  { id: 'brd', label: '吟遊詩人', names: ['吟遊詩人', '弓術士', 'Bard', 'Archer'] },
-  { id: 'mch', label: '機工士', names: ['機工士', 'Machinist'] },
-  { id: 'dnc', label: '踊り子', names: ['踊り子', 'Dancer'] },
-  { id: 'blm', label: '黒魔道士', names: ['黒魔道士', '呪術士', 'Black Mage', 'Thaumaturge'] },
-  { id: 'smn', label: '召喚士', names: ['召喚士', '巴術士', 'Summoner', 'Arcanist'] },
-  { id: 'rdm', label: '赤魔道士', names: ['赤魔道士', 'Red Mage'] },
-  { id: 'pct', label: 'ピクトマンサー', names: ['ピクトマンサー', 'Pictomancer'] }
+  { id: 'pld', label: 'ナイト', en: 'PALADIN', names: ['ナイト', '剣術士', 'Paladin', 'Gladiator'] },
+  { id: 'war', label: '戦士', en: 'WARRIOR', names: ['戦士', '斧術士', 'Warrior', 'Marauder'] },
+  { id: 'drk', label: '暗黒騎士', en: 'DARK KNIGHT', names: ['暗黒騎士', 'Dark Knight'] },
+  { id: 'gnb', label: 'ガンブレイカー', en: 'GUNBREAKER', names: ['ガンブレイカー', 'Gunbreaker'] },
+  { id: 'whm', label: '白魔道士', en: 'WHITE MAGE', names: ['白魔道士', '幻術士', 'White Mage', 'Conjurer'] },
+  { id: 'sch', label: '学者', en: 'SCHOLAR', names: ['学者', 'Scholar'] },
+  { id: 'ast', label: '占星術師', en: 'ASTROLOGIAN', names: ['占星術師', 'Astrologian'] },
+  { id: 'sge', label: '賢者', en: 'SAGE', names: ['賢者', 'Sage'] },
+  { id: 'mnk', label: 'モンク', en: 'MONK', names: ['モンク', '格闘士', 'Monk', 'Pugilist'] },
+  { id: 'drg', label: '竜騎士', en: 'DRAGOON', names: ['竜騎士', '槍術士', 'Dragoon', 'Lancer'] },
+  { id: 'nin', label: '忍者', en: 'NINJA', names: ['忍者', '双剣士', 'Ninja', 'Rogue'] },
+  { id: 'sam', label: '侍', en: 'SAMURAI', names: ['侍', 'Samurai'] },
+  { id: 'rpr', label: 'リーパー', en: 'REAPER', names: ['リーパー', 'Reaper'] },
+  { id: 'vpr', label: 'ヴァイパー', en: 'VIPER', names: ['ヴァイパー', 'Viper'] },
+  { id: 'brd', label: '吟遊詩人', en: 'BARD', names: ['吟遊詩人', '弓術士', 'Bard', 'Archer'] },
+  { id: 'mch', label: '機工士', en: 'MACHINIST', names: ['機工士', 'Machinist'] },
+  { id: 'dnc', label: '踊り子', en: 'DANCER', names: ['踊り子', 'Dancer'] },
+  { id: 'blm', label: '黒魔道士', en: 'BLACK MAGE', names: ['黒魔道士', '呪術士', 'Black Mage', 'Thaumaturge'] },
+  { id: 'smn', label: '召喚士', en: 'SUMMONER', names: ['召喚士', '巴術士', 'Summoner', 'Arcanist'] },
+  { id: 'rdm', label: '赤魔道士', en: 'RED MAGE', names: ['赤魔道士', 'Red Mage'] },
+  { id: 'pct', label: 'ピクトマンサー', en: 'PICTOMANCER', names: ['ピクトマンサー', 'Pictomancer'] }
 ];
 
 export const OTHER_JOBS: JobDef[] = [
-  { id: 'blu', label: '青魔道士', names: ['青魔道士', 'Blue Mage'] },
-  { id: 'bst', label: '魔獣使い', names: ['魔獣使い', 'Beastmaster'] },
-  { id: 'crp', label: '木工師', names: ['木工師', 'Carpenter'] },
-  { id: 'bsm', label: '鍛冶師', names: ['鍛冶師', 'Blacksmith'] },
-  { id: 'arm', label: '甲冑師', names: ['甲冑師', 'Armorer'] },
-  { id: 'gsm', label: '彫金師', names: ['彫金師', 'Goldsmith'] },
-  { id: 'ltw', label: '革細工師', names: ['革細工師', 'Leatherworker'] },
-  { id: 'wvr', label: '裁縫師', names: ['裁縫師', 'Weaver'] },
-  { id: 'alc', label: '錬金術師', names: ['錬金術師', 'Alchemist'] },
-  { id: 'cul', label: '調理師', names: ['調理師', 'Culinarian'] },
-  { id: 'min', label: '採掘師', names: ['採掘師', 'Miner'] },
-  { id: 'btn', label: '園芸師', names: ['園芸師', 'Botanist'] },
-  { id: 'fsh', label: '漁師', names: ['漁師', 'Fisher'] }
+  { id: 'blu', label: '青魔道士', en: 'BLUE MAGE', names: ['青魔道士', 'Blue Mage'] },
+  { id: 'bst', label: '魔獣使い', en: 'BEASTMASTER', names: ['魔獣使い', 'Beastmaster'] },
+  { id: 'crp', label: '木工師', en: 'CARPENTER', names: ['木工師', 'Carpenter'] },
+  { id: 'bsm', label: '鍛冶師', en: 'BLACKSMITH', names: ['鍛冶師', 'Blacksmith'] },
+  { id: 'arm', label: '甲冑師', en: 'ARMORER', names: ['甲冑師', 'Armorer'] },
+  { id: 'gsm', label: '彫金師', en: 'GOLDSMITH', names: ['彫金師', 'Goldsmith'] },
+  { id: 'ltw', label: '革細工師', en: 'LEATHERWORKER', names: ['革細工師', 'Leatherworker'] },
+  { id: 'wvr', label: '裁縫師', en: 'WEAVER', names: ['裁縫師', 'Weaver'] },
+  { id: 'alc', label: '錬金術師', en: 'ALCHEMIST', names: ['錬金術師', 'Alchemist'] },
+  { id: 'cul', label: '調理師', en: 'CULINARIAN', names: ['調理師', 'Culinarian'] },
+  { id: 'min', label: '採掘師', en: 'MINER', names: ['採掘師', 'Miner'] },
+  { id: 'btn', label: '園芸師', en: 'BOTANIST', names: ['園芸師', 'Botanist'] },
+  { id: 'fsh', label: '漁師', en: 'FISHER', names: ['漁師', 'Fisher'] }
 ];
 
 export const ALL_JOBS = [...COMBAT_JOBS, ...OTHER_JOBS];
@@ -73,3 +74,16 @@ export function jobIdFromName(raw: string): string | undefined {
   }
   return undefined;
 }
+
+/** メインジョブの選択肢（ロールごと） */
+export const JOB_ROLES: { title: string; ids: string[] }[] = [
+  { title: 'タンク', ids: ['pld', 'war', 'drk', 'gnb'] },
+  { title: 'ヒーラー', ids: ['whm', 'sch', 'ast', 'sge'] },
+  { title: '近接DPS', ids: ['mnk', 'drg', 'nin', 'sam', 'rpr', 'vpr'] },
+  { title: '遠隔物理DPS', ids: ['brd', 'mch', 'dnc'] },
+  { title: '遠隔魔法DPS', ids: ['blm', 'smn', 'rdm', 'pct'] },
+  { title: 'リミテッド', ids: ['blu', 'bst'] },
+  { title: 'クラフター', ids: ['crp', 'bsm', 'arm', 'gsm', 'ltw', 'wvr', 'alc', 'cul'] },
+  { title: 'ギャザラー', ids: ['min', 'btn', 'fsh'] }
+];
+export const jobById = (id: string) => ALL_JOBS.find((j) => j.id === id);
