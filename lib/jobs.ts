@@ -51,6 +51,12 @@ export const OTHER_JOBS: JobDef[] = [
 
 export const ALL_JOBS = [...COMBAT_JOBS, ...OTHER_JOBS];
 
+// カードの下段は「リミテッド」「クラフター」「ギャザラー」を少し離して並べる
+const pick = (ids: string[]) => OTHER_JOBS.filter((j) => ids.includes(j.id));
+export const LIMITED_JOBS = pick(['blu', 'bst']);
+export const CRAFTER_JOBS = pick(['crp', 'bsm', 'arm', 'gsm', 'ltw', 'wvr', 'alc', 'cul']);
+export const GATHERER_JOBS = pick(['min', 'btn', 'fsh']);
+
 /** レベル上限（カンスト表示に使う）。拡張で上がったらここを変える */
 export const LEVEL_CAP: Record<string, number> = { blu: 80 };
 export const DEFAULT_LEVEL_CAP = 100;
