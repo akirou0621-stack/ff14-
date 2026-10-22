@@ -3,6 +3,8 @@
 ここに画像を入れるだけで、カードのジョブアイコンが自動で差し替わります。
 コードを触る必要はありません。
 
+**画面の絵つきの手順はこちら → https://ff14.vercel.app/icon-guide.html**
+
 ## 入れ方
 
 1. このフォルダ（`public/icons`）を開いた状態で「Add file」→「Upload files」

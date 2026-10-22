@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アイコンの入れ方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column of numbered steps; each step pairs a short instruction with a drawn mock of the GitHub screen and a red marker on the thing to press */
+:root{
+  --bg:#eef1f6; --paper:#ffffff; --ink:#1b2230; --muted:#4f5b6d; --line:#c9d1dc;
+  --accent:#4a6a96; --mark:#e0383e; --mark-soft:#fde3e4; --ok:#2f7d4f;
+  /* 画面の絵（GitHubの見た目を簡略化したもの。どちらのテーマでも同じ見た目） */
+  --scr-bg:#ffffff; --scr-ink:#1f2328; --scr-muted:#59636e; --scr-line:#d1d9e0; --scr-head:#f6f8fa; --scr-link:#0969da; --scr-green:#1f883d;
+  --round:'Zen Maru Gothic','Zen Kaku Gothic New',system-ui,sans-serif;
+  --body:'Zen Kaku Gothic New',system-ui,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141922; --paper:#1d2430; --ink:#e8ecf2; --muted:#a6b0bf; --line:#344052;
+  --accent:#8fb0dc; --mark:#ff5a60; --mark-soft:#3a2024; --ok:#5cc489; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141922; --paper:#1d2430; --ink:#e8ecf2; --muted:#a6b0bf; --line:#344052;
+  --accent:#8fb0dc; --mark:#ff5a60; --mark-soft:#3a2024; --ok:#5cc489; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--round);font-weight:700;font-size:30px;line-height:1.3;margin:0;text-wrap:balance}
+.lead{margin:6px 0 0;color:var(--muted)}
+a{color:var(--accent)}
+.card{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:18px 18px 20px;display:flex;flex-direction:column;gap:12px}
+.step-head{display:flex;gap:12px;align-items:flex-start}
+.num{flex:none;width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--paper);display:grid;place-items:center;font-family:var(--round);font-weight:700;font-size:19px}
+.step-head h2{margin:4px 0 0;font-family:var(--round);font-size:20px;line-height:1.4;text-wrap:balance}
+.card p{margin:0}
+.big-link{display:block;background:var(--mark-soft);border:2px solid var(--mark);border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:14px;word-break:break-all;color:var(--ink);text-decoration:none}
+.big-link b{display:block;font-family:var(--body);font-size:13px;color:var(--mark);margin-bottom:2px}
+.copy{align-self:flex-start;font:inherit;font-size:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.note{font-size:14px;color:var(--muted)}
+.check{border-left:4px solid var(--ok);padding:6px 0 6px 12px;font-size:15px}
+.warn{border-left:4px solid var(--mark);padding:6px 0 6px 12px;font-size:15px}
+kbd{font-family:var(--body);font-weight:700;background:var(--bg);border:1.5px solid var(--line);border-bottom-width:3px;border-radius:6px;padding:0 6px;font-size:.95em;white-space:nowrap}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---- 画面の絵 ---- */
+.screen{background:var(--scr-bg);color:var(--scr-ink);border:1.5px solid var(--scr-line);border-radius:10px;overflow:hidden;font-size:13px;line-height:1.5;box-shadow:0 2px 10px rgba(20,30,50,.12)}
+.screen .bar{background:var(--scr-head);border-bottom:1px solid var(--scr-line);padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.crumb{font-size:15px;color:var(--scr-link);font-weight:500}
+.crumb span{color:var(--scr-muted);margin:0 4px}
+.crumb strong{color:var(--scr-ink)}
+.spacer{flex:1}
+.gbtn{border:1px solid var(--scr-line);background:var(--scr-head);color:var(--scr-ink);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.gbtn.green{background:var(--scr-green);border-color:var(--scr-green);color:#fff}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--scr-line)}
+.row:last-child{border-bottom:0}
+.ic{width:16px;height:13px;flex:none;border-radius:2px;background:#54aeff}
+.ic.file{background:transparent;border:1.5px solid var(--scr-muted);height:15px;width:12px;border-radius:2px}
+.row .name{color:var(--scr-ink)}
+.row .msg{color:var(--scr-muted);font-size:12px;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.dim{opacity:.45}
+/* 押すところ */
+.hit{position:relative;outline:3px solid var(--mark);outline-offset:2px;border-radius:6px;background:var(--mark-soft)}
+.screen .hit{background:#fde3e4}
+.tag{display:inline-block;background:var(--mark);color:#fff;font-weight:700;font-size:12px;border-radius:999px;padding:1px 9px;margin-left:6px;white-space:nowrap;font-family:var(--body)}
+.menu{margin:0 12px 10px auto;width:min(220px,80%);border:1px solid var(--scr-line);border-radius:8px;box-shadow:0 6px 18px rgba(20,30,50,.18);background:var(--scr-bg);padding:4px;display:flex;flex-direction:column}
+.menu div{padding:6px 10px;border-radius:5px}
+.drop{margin:12px;border:2px dashed var(--scr-line);border-radius:8px;padding:22px 10px;text-align:center;color:var(--scr-muted)}
+.drop b{display:block;color:var(--scr-ink);font-size:14px}
+.drop .fake-file{display:inline-flex;gap:6px;align-items:center;margin-top:10px;background:var(--scr-head);border:1px solid var(--scr-line);border-radius:6px;padding:4px 10px;color:var(--scr-ink);font-family:var(--mono);font-size:12px}
+.commit{margin:0 12px 12px;border:1px solid var(--scr-line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.commit .input{border:1px solid var(--scr-line);border-radius:6px;padding:5px 8px;color:var(--scr-muted);font-size:12px}
+.commit .gbtn{align-self:flex-start;padding:5px 14px;font-size:13px}
+
+/* ファイル名の一覧 */
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.names div{display:flex;justify-content:space-between;gap:8px;border:1.5px solid var(--line);border-radius:8px;padding:5px 10px;font-size:14px;background:var(--bg)}
+.names code{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--accent)}
+.group{font-family:var(--round);font-weight:700;font-size:15px;margin:6px 0 0}
+.rules{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px}
+@media (max-width:420px){h1{font-size:25px}.step-head h2{font-size:18px}.row .msg{display:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>ジョブアイコンの入れ方</h1>
+    <p class="lead">GitHubのフォルダに画像を入れるだけで、カードのアイコンが入れ替わります。パソコンでの手順です。赤い枠のところを順番に押してください。</p>
+  </header>
+
+  <section class="card" aria-labelledby="s0">
+    <div class="step-head"><span class="num">0</span><h2 id="s0">はじめに一度だけ：招待を受ける</h2></div>
+    <p>GitHubから「招待（invitation）」のメールが届いています。メールを開いて <kbd>Accept invitation</kbd> を押してください。これを押していないと、アップロードのボタンが出てきません。</p>
+    <p class="note">メールが見つからないときは、GitHubにログインして右上のベルのマーク（お知らせ）を見てください。</p>
+  </section>
+
+  <section class="card" aria-labelledby="s1">
+    <div class="step-head"><span class="num">1</span><h2 id="s1">このリンクを開く</h2></div>
+    <a class="big-link" href="https://github.com/akirou0621-stack/ff14-" target="_blank" rel="noreferrer"><b>カードジェネレータの置き場所（リポジトリ）</b>https://github.com/akirou0621-stack/ff14-</a>
+    <button class="copy" type="button" data-copy="https://github.com/akirou0621-stack/ff14-">リンクをコピー</button>
+    <p class="note">開いたら、右上にGitHubの自分のアイコンが出ているか（ログインしているか）確認してください。</p>
+  </section>
+
+  <section class="card" aria-labelledby="s2">
+    <div class="step-head"><span class="num">2</span><h2 id="s2">「public」フォルダを押す</h2></div>
+    <p>ファイルの一覧の中から、青いフォルダのマークの <kbd>public</kbd> を押します。</p>
+    <div class="screen" role="img" aria-label="リポジトリのトップ画面。ファイル一覧の public フォルダに赤い印">
+      <div class="bar"><span class="crumb"><strong>ff14-</strong></span><span class="spacer"></span><span class="gbtn">Add file ▾</span><span class="gbtn green">&lt;&gt; Code ▾</span></div>
+      <div class="rows">
+        <div class="row dim"><span class="ic"></span><span class="name">app</span><span class="msg">…</span></div>
+        <div class="row dim"><span class="ic"></span><span class="name">lib</span><span class="msg">…</span></div>
+        <div class="row"><span class="hit" style="display:inline-flex;gap:8px;align-items:center;padding:1px 6px"><span class="ic"></span><span class="name">public</span></span><span class="tag">ここを押す</span></div>
+        <div class="row dim"><span class="ic file"></span><span class="name">README.md</span></div>
+        <div class="row dim"><span class="ic file"></span><span class="name">package.json</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="s3">
+    <div class="step-head"><span class="num">3</span><h2 id="s3">「icons」フォルダを押す</h2></div>
+    <p>中に2つフォルダがあります。<kbd>icons</kbd> のほうを押してください。<kbd>jobs</kbd> ではありません。</p>
+    <div class="screen" role="img" aria-label="public フォルダの中。icons フォルダに赤い印">
+      <div class="bar"><span class="crumb">ff14-<span>/</span><strong>public</strong><span>/</span></span></div>
+      <div class="rows">
+        <div class="row"><span class="hit" style="display:inline-flex;gap:8px;align-items:center;padding:1px 6px"><span class="ic"></span><span class="name">icons</span></span><span class="tag">ここを押す</span></div>
+        <div class="row dim"><span class="ic"></span><span class="name">jobs</span><span class="msg">こっちは押さない</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="s4">
+    <div class="step-head"><span class="num">4</span><h2 id="s4">「Add file」→「Upload files」</h2></div>
+    <p>まず、画面の上の場所の表示が <b>ff14- / public / icons /</b> になっているか確認します。なっていたら、右上の <kbd>Add file</kbd> を押して、出てきたメニューの <kbd>Upload files</kbd> を押します。</p>
+    <div class="screen" role="img" aria-label="icons フォルダの中。右上の Add file ボタンと、メニューの Upload files に赤い印">
+      <div class="bar"><span class="crumb">ff14-<span>/</span>public<span>/</span><strong>icons</strong><span>/</span></span><span class="spacer"></span><span class="gbtn hit">Add file ▾</span><span class="tag">①</span></div>
+      <div class="menu">
+        <div>Create new file</div>
+        <div class="hit"><b>Upload files</b> <span class="tag">②</span></div>
+      </div>
+      <div class="rows">
+        <div class="row dim"><span class="ic file"></span><span class="name">README.md</span></div>
+        <div class="row dim"><span class="ic file"></span><span class="name">pld.png</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="s5">
+    <div class="step-head"><span class="num">5</span><h2 id="s5">画像をドラッグして入れる</h2></div>
+    <p>点線の四角の中に、パソコンの画像ファイルをマウスでつかんで持ってきて、離します。<b>choose your files</b> を押して、画像を選ぶこともできます。何枚かまとめて入れても大丈夫です。</p>
+    <div class="screen" role="img" aria-label="アップロード画面。点線の四角に画像をドラッグする">
+      <div class="bar"><span class="crumb">ff14-<span>/</span>public<span>/</span><strong>icons</strong><span>/</span></span></div>
+      <div class="drop hit" style="outline-offset:-2px">
+        <b>Drag files here to add them to your repository</b>
+        Or <span style="color:var(--scr-link)">choose your files</span>
+        <div><span class="fake-file">🖼 war.png</span> <span class="tag">ここに入れる</span></div>
+      </div>
+      <div class="rows" style="margin:0 12px 12px;border:1px solid var(--scr-line);border-radius:8px">
+        <div class="row"><span class="ic file"></span><span class="name">war.png</span><span class="msg">← 入れた画像が並ぶ</span></div>
+      </div>
+    </div>
+    <p class="warn">下に並んだ名前が <b>war.png</b> のように<b>ファイル名だけ</b>になっていればOKです。名前は下の一覧どおりにしてください。</p>
+  </section>
+
+  <section class="card" aria-labelledby="s6">
+    <div class="step-head"><span class="num">6</span><h2 id="s6">「Commit changes」を押す</h2></div>
+    <p>画面をいちばん下までスクロールして、緑の <kbd>Commit changes</kbd> を押します。文字の欄は何も書かなくて大丈夫です。</p>
+    <div class="screen" role="img" aria-label="アップロード画面の下。緑の Commit changes ボタンに赤い印">
+      <div class="commit">
+        <b>Commit changes</b>
+        <div class="input">Add files via upload</div>
+        <div class="input">Add an optional extended description…</div>
+        <div><span class="gbtn green hit">Commit changes</span> <span class="tag">ここを押す</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="s7">
+    <div class="step-head"><span class="num">7</span><h2 id="s7">1〜2分待って、サイトで確認</h2></div>
+    <p>自動でサイトが更新されます。少し待ってから開くと、アイコンが入れ替わっています。</p>
+    <a class="big-link" href="https://ff14.vercel.app" target="_blank" rel="noreferrer"><b>カードジェネレータ</b>https://ff14.vercel.app</a>
+    <p class="check">変わっていないときは、もう少し待ってからページを再読み込み（<kbd>F5</kbd>、Macは <kbd>⌘</kbd>+<kbd>R</kbd>）してください。</p>
+    <p class="note">同じ名前の画像をもう一度入れれば、上書きされます。描き直したときも同じ手順でOKです。</p>
+  </section>
+
+  <section class="card" aria-labelledby="rules">
+    <div class="step-head"><span class="num">!</span><h2 id="rules">画像のきまり</h2></div>
+    <ul class="rules">
+      <li>形式は <b>PNG</b>（ファイル名の最後が <code>.png</code>）</li>
+      <li><b>背景は透明</b>にする</li>
+      <li><b>正方形</b>で、<b>512×512</b> くらいの大きさがおすすめ</li>
+      <li>ファイル名は<b>半角の小文字</b>で、下の一覧どおりにする</li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="names">
+    <div class="step-head"><span class="num">#</span><h2 id="names">ファイル名の一覧</h2></div>
+    <p class="group">タンク・ヒーラー</p>
+    <div class="names">
+      <div>ナイト<code>pld.png</code></div><div>戦士<code>war.png</code></div><div>暗黒騎士<code>drk.png</code></div><div>ガンブレイカー<code>gnb.png</code></div>
+      <div>白魔道士<code>whm.png</code></div><div>学者<code>sch.png</code></div><div>占星術師<code>ast.png</code></div><div>賢者<code>sge.png</code></div>
+    </div>
+    <p class="group">DPS</p>
+    <div class="names">
+      <div>モンク<code>mnk.png</code></div><div>竜騎士<code>drg.png</code></div><div>忍者<code>nin.png</code></div><div>侍<code>sam.png</code></div>
+      <div>リーパー<code>rpr.png</code></div><div>ヴァイパー<code>vpr.png</code></div><div>吟遊詩人<code>brd.png</code></div><div>機工士<code>mch.png</code></div>
+      <div>踊り子<code>dnc.png</code></div><div>黒魔道士<code>blm.png</code></div><div>召喚士<code>smn.png</code></div><div>赤魔道士<code>rdm.png</code></div>
+      <div>ピクトマンサー<code>pct.png</code></div>
+    </div>
+    <p class="group">リミテッドジョブ</p>
+    <div class="names"><div>青魔道士<code>blu.png</code></div><div>魔獣使い<code>bst.png</code></div></div>
+    <p class="group">クラフター</p>
+    <div class="names">
+      <div>木工師<code>crp.png</code></div><div>鍛冶師<code>bsm.png</code></div><div>甲冑師<code>arm.png</code></div><div>彫金師<code>gsm.png</code></div>
+      <div>革細工師<code>ltw.png</code></div><div>裁縫師<code>wvr.png</code></div><div>錬金術師<code>alc.png</code></div><div>調理師<code>cul.png</code></div>
+    </div>
+    <p class="group">ギャザラー</p>
+    <div class="names"><div>採掘師<code>min.png</code></div><div>園芸師<code>btn.png</code></div><div>漁師<code>fsh.png</code></div></div>
+  </section>
+
+  <section class="card" aria-labelledby="trouble">
+    <div class="step-head"><span class="num">?</span><h2 id="trouble">うまくいかないとき</h2></div>
+    <p><b>「Add file」が出てこない</b><br>手順0の招待を受けていないか、GitHubにログインしていません。</p>
+    <p><b>アイコンが変わらない</b><br>ファイル名が一覧と違うかもしれません（大文字が入っている、<code>.PNG</code> になっている、など）。GitHubの icons フォルダで名前を確認してください。</p>
+    <p><b>違う場所に入れてしまった</b><br>そのままで大丈夫です。お願いした人に知らせてもらえれば直します。</p>
+  </section>
+</div>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var text=btn.getAttribute('data-copy');var done=function(){btn.textContent='コピーしました';setTimeout(function(){btn.textContent='リンクをコピー'},1600)};
+    try{navigator.clipboard.writeText(text).then(done,function(){btn.textContent=text})}catch(e){btn.textContent=text}
+  });
+});
+</script>
+
+</body>
+</html>
