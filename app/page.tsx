@@ -7,7 +7,7 @@ import { ALL_DCS, REGIONS, worldsOf } from '@/lib/worlds';
 
 const STORAGE_KEY = 'ffxiv-card-generator-v2';
 
-/** 始めたパッチの選択肢（拡張ごとにまとめる）。新しいパッチが来たらここに足す */
+/** メインストーリーの進行（今どのパッチまで進んでいるか）の選択肢。新しいパッチが来たらここに足す */
 const PATCH_GROUPS: { title: string; patches: string[] }[] = [
   { title: '黄金のレガシー', patches: ['7.0', '7.1', '7.2', '7.3', '7.4', '7.5'] },
   { title: '暁月のフィナーレ', patches: ['6.0', '6.1', '6.2', '6.3', '6.4', '6.5'] },
@@ -17,7 +17,6 @@ const PATCH_GROUPS: { title: string; patches: string[] }[] = [
   { title: '新生エオルゼア', patches: ['2.0', '2.1', '2.2', '2.3', '2.4', '2.5'] }
 ];
 const PATCH_OPTIONS = PATCH_GROUPS.flatMap((g) => g.patches.map((p) => `${p} ${g.title}`));
-const LEGACY_PATCH = '旧FF14（1.x）';
 
 /** よく使われるハッシュタグ（ジャンルごと）。増やしたいときはここに足す */
 const TAG_GROUPS: { title: string; tags: string[] }[] = [
@@ -466,10 +465,10 @@ export default function Home() {
           <section className="box">
             <h2>Patch / PLAY time</h2>
             <label className="field" htmlFor="patch">
-              <span>始めたパッチ</span>
+              <span>メインストーリーの進行（今どのパッチまで進んでいるか）</span>
               <select id="patch" value={profile.patch} onChange={(e) => update('patch', e.target.value)}>
                 <option value="">（表示しない）</option>
-                {profile.patch && profile.patch !== LEGACY_PATCH && !PATCH_OPTIONS.includes(profile.patch) && (
+                {profile.patch && !PATCH_OPTIONS.includes(profile.patch) && (
                   <option value={profile.patch}>{profile.patch}</option>
                 )}
                 {PATCH_GROUPS.map((g) => (
@@ -479,9 +478,6 @@ export default function Home() {
                     ))}
                   </optgroup>
                 ))}
-                <optgroup label="それより前">
-                  <option value={LEGACY_PATCH}>{LEGACY_PATCH}</option>
-                </optgroup>
               </select>
             </label>
             <p className="hint">遊ぶ時間帯をなぞって塗ってください。塗ったマスをなぞると消えます。</p>
