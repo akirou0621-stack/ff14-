@@ -567,9 +567,12 @@ type CardProps = {
 };
 
 const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, levels, weekday, holiday, images, look }, ref) {
-  // 名前が長いときは自動で文字を小さくする（だいたい 0.5文字幅 × 文字数 が 940px に収まるように）
-  const nameSize = Math.min(104, Math.floor(1880 / Math.max(profile.characterName.length, 1)));
   const tags = profile.hashtags.split(/\s+/).filter(Boolean);
+
+  // はみ出すときだけ文字を小さくする
+  // 名前：1行で横幅に収まるまで／ハッシュタグ：決まった高さに収まるまで
+  const nameRef = useFitText<HTMLDivElement>(profile.characterName, 104, 28, (el) => el.scrollWidth > el.clientWidth);
+  const tagsRef = useFitText<HTMLDivElement>(profile.hashtags, 22, 10, (el) => el.scrollHeight > el.clientHeight);
 
   return (
     <div ref={ref} className="card" style={{ '--base': look.base } as React.CSSProperties}>
@@ -585,7 +588,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
         )}
         <div className="card-veil" style={{ background: `rgba(255,255,255,${look.veil})` }} />
         <div className="card-text">
-          <div className="c-name" style={{ fontSize: nameSize }}>{profile.characterName}</div>
+          <div className="c-name" ref={nameRef}>{profile.characterName}</div>
           <div className="c-job">{profile.mainJob}</div>
           <div className="c-dc">{profile.datacenter}</div>
           <div className="c-dc">{profile.world}</div>
@@ -613,15 +616,16 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
             <div className="c-patch">
               <div className="c-label">Patch</div>
               <div className="c-patch-value">{profile.patch}</div>
-              <div className="c-tags">
-                {tags.map((t, i) => <span key={`${t}-${i}`}>{t.startsWith('#') ? t : `#${t}`}</span>)}
-              </div>
             </div>
             <div className="c-time">
               <div className="c-label">PLAY time</div>
               <HourBar label="平日" hours={weekday} />
               <HourBar label="休日" hours={holiday} />
             </div>
+          </div>
+
+          <div className="c-tags" ref={tagsRef}>
+            {tags.map((t, i) => <span key={`${t}-${i}`}>{t.startsWith('#') ? t : `#${t}`}</span>)}
           </div>
         </div>
 
@@ -630,6 +634,37 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
     </div>
   );
 });
+
+/**
+ * 文字がはみ出すあいだ、フォントを1pxずつ小さくする。
+ * text が変わるたび・フォントの読み込みが終わったときに測り直す。
+ */
+function useFitText<T extends HTMLElement>(text: string, max: number, min: number, overflows: (el: T) => boolean) {
+  const ref = useRef<T | null>(null);
+  const check = useRef(overflows);
+  check.current = overflows;
+
+  useLayoutEffect(() => {
+    const fit = () => {
+      const el = ref.current;
+      if (!el) return;
+      let size = max;
+      el.style.fontSize = `${size}px`;
+      while (size > min && check.current(el)) {
+        size -= 1;
+        el.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    let alive = true;
+    document.fonts?.ready.then(() => alive && fit());
+    return () => {
+      alive = false;
+    };
+  }, [text, max, min]);
+
+  return ref;
+}
 
 function JobTable({ jobs, levels }: { jobs: JobDef[]; levels: JobLevels }) {
   return (
