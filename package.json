@@ -1,6 +1,6 @@
 {
   "name": "ff14-card-generator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,7 +12,8 @@
     "html-to-image": "^1.11.11",
     "next": "14.2.15",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "cheerio": "1.0.0"
   },
   "devDependencies": {
     "@types/node": "20.14.12",

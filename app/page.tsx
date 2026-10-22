@@ -1,533 +1,612 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
+import { COMBAT_JOBS, OTHER_JOBS, capOf, emptyLevels, type JobDef, type JobLevels } from '@/lib/jobs';
 
-const STORAGE_KEY = 'ffxiv-card-generator-state';
+const STORAGE_KEY = 'ffxiv-card-generator-v2';
+const CARD_W = 1024;
+const CARD_H = 1156;
 
-const JOB_GROUPS = [
-  {
-    title: 'タンク',
-    jobs: [
-      { id: 'paladin', name: 'ナイト' },
-      { id: 'warrior', name: '戦士' },
-      { id: 'darkknight', name: '暗黒騎士' },
-      { id: 'gunbreaker', name: 'ガンブレイカー' }
-    ]
-  },
-  {
-    title: 'ヒーラー',
-    jobs: [
-      { id: 'whitemage', name: '白魔道士' },
-      { id: 'scholar', name: '学者' },
-      { id: 'astrologian', name: '占星術師' },
-      { id: 'sage', name: '賢者' }
-    ]
-  },
-  {
-    title: '近接物理DPS',
-    jobs: [
-      { id: 'monk', name: 'モンク' },
-      { id: 'dragoon', name: '竜騎士' },
-      { id: 'ninja', name: '忍者' },
-      { id: 'samurai', name: '侍' },
-      { id: 'reaper', name: 'リーパー' }
-    ]
-  },
-  {
-    title: '遠隔物理DPS',
-    jobs: [
-      { id: 'bard', name: '吟遊詩人' },
-      { id: 'machinist', name: '機工士' },
-      { id: 'dancer', name: '踊り子' }
-    ]
-  },
-  {
-    title: '遠隔魔法DPS',
-    jobs: [
-      { id: 'blackmage', name: '黒魔道士' },
-      { id: 'summoner', name: '召喚士' },
-      { id: 'redmage', name: '赤魔道士' },
-      { id: 'bluemage', name: '青魔道士' }
-    ]
-  },
-  {
-    title: 'ギャザラー',
-    jobs: [
-      { id: 'miner', name: '採掘' },
-      { id: 'botanist', name: '園芸' },
-      { id: 'fisher', name: '漁師' }
-    ]
-  },
-  {
-    title: 'クラフター',
-    jobs: [
-      { id: 'carpenter', name: '木工師' },
-      { id: 'blacksmith', name: '鍛冶師' },
-      { id: 'armorer', name: '甲冶師' },
-      { id: 'goldsmith', name: '彫金師' },
-      { id: 'leatherworker', name: '革細工師' },
-      { id: 'weaver', name: '裁縫師' },
-      { id: 'alchemist', name: '錬金術師' },
-      { id: 'culinarian', name: '調理師' }
-    ]
-  }
-];
-
-const DEFAULT_JOB_LEVELS: Record<string, number> = {
-  paladin: 90,
-  warrior: 80,
-  darkknight: 90,
-  gunbreaker: 90,
-  whitemage: 100,
-  scholar: 90,
-  astrologian: 90,
-  sage: 100,
-  monk: 100,
-  dragoon: 100,
-  ninja: 100,
-  samurai: 100,
-  reaper: 100,
-  bard: 100,
-  machinist: 100,
-  dancer: 100,
-  blackmage: 100,
-  summoner: 100,
-  redmage: 100,
-  bluemage: 100,
-  miner: 100,
-  botanist: 100,
-  fisher: 100,
-  carpenter: 100,
-  blacksmith: 100,
-  armorer: 100,
-  goldsmith: 100,
-  leatherworker: 100,
-  weaver: 100,
-  alchemist: 100,
-  culinarian: 100
+type Profile = {
+  characterName: string;
+  mainJob: string;
+  datacenter: string;
+  world: string;
+  fcLabel: string;
+  fc: string;
+  bio: string;
+  sns: string;
+  patch: string;
+  hashtags: string;
+  credit: string;
 };
 
-const INITIAL_PROFILE = {
-  characterName: 'Aster Kisaragi',
-  mainJob: '白魔道士',
-  world: 'ラールガーデン',
-  datacenter: 'マザーグース',
-  fc: '星葬会',
-  bio: '冒険とお茶と静かな夜が好き。人に優しく、今日は今日で一番いい日を目指します。',
-  xUrl: '@aster_ff14',
-  patch: '7.0 / Dawntrail',
-  hashtags: ['FF14', '冒険', '白魔', 'コスプレ'],
-  weekdayPlaytime: '20:00-23:00',
-  weekendPlaytime: '10:00-18:00'
+type Images = {
+  background: string;
+  main: string;
+  portraits: [string, string, string];
 };
 
-function getDefaultJobLevels() {
-  return { ...DEFAULT_JOB_LEVELS };
+type Look = {
+  veil: number; // 左側の白さ
+  base: string; // 下半分の色
+  zoom: number; // キャラ画像の拡大
+  posX: number; // キャラ画像の位置 0-100
+  posY: number;
+};
+
+const INITIAL_PROFILE: Profile = {
+  characterName: 'Hikari Warrior',
+  mainJob: 'WHITE MAGE',
+  datacenter: 'Mana',
+  world: 'Anima',
+  fcLabel: 'FC',
+  fc: 'Free Company',
+  bio: 'よろしくお願いします。',
+  sns: 'X : @your_id',
+  patch: '6.0 暁月のフィナーレ',
+  hashtags: '#雑談 #コンテンツルーレット #麻雀 #SS #ミラプリ',
+  credit: '© SQUARE ENIX'
+};
+
+const INITIAL_LEVELS: JobLevels = {
+  ...emptyLevels(),
+  pld: 100, whm: 100, sch: 92, dnc: 100, rdm: 88, blu: 80, cul: 100, fsh: 74
+};
+
+const INITIAL_IMAGES: Images = { background: '', main: '', portraits: ['', '', ''] };
+const INITIAL_LOOK: Look = { veil: 0.42, base: '#86a2c0', zoom: 1, posX: 50, posY: 50 };
+const emptyHours = () => Array<boolean>(24).fill(false);
+const hoursFrom = (list: number[]) => Array.from({ length: 24 }, (_, h) => list.includes(h));
+
+function readFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
 }
+
+/** ロドストの画像を自分のサーバー経由で読み込み、データとして持つ（PNG書き出しで止められないように） */
+async function lodestoneImageToData(url: string) {
+  const res = await fetch(`/api/image?url=${encodeURIComponent(url)}`);
+  if (!res.ok) throw new Error('image');
+  const blob = await res.blob();
+  return readFile(new File([blob], 'img'));
+}
+
+/* ============================== ページ本体 ============================== */
 
 export default function Home() {
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const [profile, setProfile] = useState(INITIAL_PROFILE);
-  const [jobs, setJobs] = useState<Record<string, number>>(getDefaultJobLevels());
-  const [mainImage, setMainImage] = useState('');
-  const [portraitImages, setPortraitImages] = useState<string[]>(['', '', '']);
+  const [profile, setProfile] = useState<Profile>(INITIAL_PROFILE);
+  const [levels, setLevels] = useState<JobLevels>(INITIAL_LEVELS);
+  const [weekday, setWeekday] = useState<boolean[]>(hoursFrom([20, 21, 22, 23]));
+  const [holiday, setHoliday] = useState<boolean[]>(hoursFrom([13, 14, 15, 16, 20, 21, 22, 23]));
+  const [images, setImages] = useState<Images>(INITIAL_IMAGES);
+  const [look, setLook] = useState<Look>(INITIAL_LOOK);
+  const [loaded, setLoaded] = useState(false);
+
   const [lodestoneUrl, setLodestoneUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exported, setExported] = useState('');
   const [status, setStatus] = useState<{ type: 'idle' | 'success' | 'error'; message: string }>({
     type: 'idle',
-    message: '公開プロフィールのURLを入力すると、ジョブレベルを自動取得できます。'
+    message: 'ロドストのキャラページのURLを入れると、名前・ワールド・全ジョブのレベルを読み込みます。'
   });
+  const [storageNote, setStorageNote] = useState('');
 
+  /* ---------- 保存と復元（ブラウザ内） ---------- */
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-
     try {
-      const parsed = JSON.parse(saved) as {
-        profile?: typeof INITIAL_PROFILE;
-        jobs?: Record<string, number>;
-        mainImage?: string;
-        portraitImages?: string[];
-      };
-
-      if (parsed.profile) setProfile(parsed.profile);
-      if (parsed.jobs) setJobs(parsed.jobs);
-      if (parsed.mainImage) setMainImage(parsed.mainImage);
-      if (parsed.portraitImages) setPortraitImages(parsed.portraitImages.slice(0, 3));
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (saved) {
+        if (saved.profile) setProfile({ ...INITIAL_PROFILE, ...saved.profile });
+        if (saved.levels) setLevels({ ...emptyLevels(), ...saved.levels });
+        if (saved.weekday) setWeekday(saved.weekday);
+        if (saved.holiday) setHoliday(saved.holiday);
+        if (saved.look) setLook({ ...INITIAL_LOOK, ...saved.look });
+        if (saved.images) setImages({ ...INITIAL_IMAGES, ...saved.images });
+      }
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
+      /* 壊れていたら初期値のまま */
     }
+    setLoaded(true);
   }, []);
 
   useEffect(() => {
-    const payload = JSON.stringify({ profile, jobs, mainImage, portraitImages });
-    localStorage.setItem(STORAGE_KEY, payload);
-  }, [profile, jobs, mainImage, portraitImages]);
-
-  const updateProfile = <K extends keyof typeof INITIAL_PROFILE>(field: K, value: (typeof INITIAL_PROFILE)[K]) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, slot: 'main' | 'portrait') => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      if (slot === 'main') {
-        setMainImage(result);
-      } else {
-        setPortraitImages((prev) => {
-          const next = [...prev];
-          const index = Number(event.target.dataset.index ?? 0);
-          next[index] = result;
-          return next;
-        });
+    if (!loaded) return;
+    const base = { profile, levels, weekday, holiday, look };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...base, images }));
+      setStorageNote('');
+    } catch {
+      // 画像が大きくて保存しきれないときは、文字だけ保存する
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(base));
+        setStorageNote('画像が大きいため、画像は自動保存されません（ページを閉じると消えます）。');
+      } catch {
+        setStorageNote('このブラウザでは自動保存できません。');
       }
-    };
-    reader.readAsDataURL(file);
+    }
+  }, [loaded, profile, levels, weekday, holiday, look, images]);
+
+  const update = <K extends keyof Profile>(key: K, value: Profile[K]) => setProfile((p) => ({ ...p, [key]: value }));
+  const updateLook = <K extends keyof Look>(key: K, value: Look[K]) => setLook((l) => ({ ...l, [key]: value }));
+
+  const setLevel = (id: string, raw: string) => {
+    const n = parseInt(raw, 10);
+    setLevels((prev) => ({ ...prev, [id]: Number.isFinite(n) && n > 0 ? Math.min(n, 999) : null }));
   };
 
-  const setJobLevel = (jobId: string, nextValue: number) => {
-    setJobs((prev) => ({ ...prev, [jobId]: Math.max(0, Math.min(1000, nextValue)) }));
+  const upload = async (e: React.ChangeEvent<HTMLInputElement>, slot: 'background' | 'main' | 0 | 1 | 2) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const data = await readFile(file);
+    setImages((prev) => {
+      if (typeof slot === 'number') {
+        const portraits = [...prev.portraits] as Images['portraits'];
+        portraits[slot] = data;
+        return { ...prev, portraits };
+      }
+      return { ...prev, [slot]: data };
+    });
   };
 
-  const fetchLodestoneProfile = async () => {
+  /* ---------- ロドストから読み込み ---------- */
+  const fetchLodestone = async () => {
     if (!lodestoneUrl.trim()) {
-      setStatus({ type: 'error', message: 'Lodestone の URL またはキャラクターIDを入力してください。' });
+      setStatus({ type: 'error', message: 'ロドストのURLかキャラクターIDを入力してください。' });
       return;
     }
-
     setIsLoading(true);
-    setStatus({ type: 'idle', message: 'Lodestone の公開プロフィールを取得しています...' });
-
+    setStatus({ type: 'idle', message: 'ロドストから読み込んでいます…' });
     try {
-      const params = new URLSearchParams();
-      params.set('url', lodestoneUrl.trim());
-      const response = await fetch(`/api/lodestone?${params.toString()}`);
-      const data = await response.json();
+      const res = await fetch(`/api/lodestone?url=${encodeURIComponent(lodestoneUrl.trim())}`);
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || '読み込みに失敗しました。');
+      const d = json.data;
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Lodestone からの取得に失敗しました。');
+      setProfile((p) => ({
+        ...p,
+        characterName: d.characterName || p.characterName,
+        world: d.world || p.world,
+        datacenter: d.datacenter || p.datacenter,
+        fc: d.fc || p.fc
+      }));
+      setLevels({ ...emptyLevels(), ...d.levels });
+
+      // 画像は「まだ自分で入れていない枠」にだけ入れる
+      const imageTasks: Promise<void>[] = [];
+      if (d.portrait && !images.main) {
+        imageTasks.push(lodestoneImageToData(d.portrait).then((data) => setImages((p) => ({ ...p, main: data }))));
       }
-
-      const result = data.data;
-
-      if (result.characterName) updateProfile('characterName', result.characterName);
-      if (result.world) updateProfile('world', result.world);
-      if (result.datacenter) updateProfile('datacenter', result.datacenter);
-      if (result.fc) updateProfile('fc', result.fc);
-      if (result.mainJob) updateProfile('mainJob', result.mainJob);
-      if (result.title) updateProfile('bio', result.title);
-      if (result.avatar) setMainImage(result.avatar);
-
-      if (result.levels && typeof result.levels === 'object') {
-        setJobs((prev) => ({ ...prev, ...result.levels }));
+      if (d.face && !images.portraits[0]) {
+        imageTasks.push(
+          lodestoneImageToData(d.face).then((data) =>
+            setImages((p) => ({ ...p, portraits: [data, p.portraits[1], p.portraits[2]] }))
+          )
+        );
       }
+      await Promise.allSettled(imageTasks);
 
       setStatus({
         type: 'success',
-        message: `${result.characterName || 'キャラクター'} の公開情報を取得しました。取得できないジョブは手動で修正できます。`
+        message: `${d.characterName} を読み込みました（解放済み ${d.unlockedCount} ジョブ）。違うところは手で直せます。`
       });
-    } catch (error) {
-      setStatus({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'Lodestone の取得に失敗しました。URL と公開設定を確認してください。'
-      });
+    } catch (err) {
+      setStatus({ type: 'error', message: err instanceof Error ? err.message : '読み込みに失敗しました。' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDownload = async () => {
+  /* ---------- PNG書き出し ---------- */
+  const exportPng = async () => {
     if (!cardRef.current) return;
-
-    setIsDownloading(true);
+    setIsExporting(true);
     try {
+      await document.fonts.ready;
       const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
+        width: CARD_W,
+        height: CARD_H,
         pixelRatio: 2,
-        skipFonts: false
+        cacheBust: true
       });
-
-      const link = document.createElement('a');
-      link.download = `${profile.characterName || 'ffxiv-card'}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (error) {
-      console.error(error);
-      setStatus({
-        type: 'error',
-        message: '画像の書き出しに失敗しました。ブラウザの設定や画像読み込みを確認してください。'
-      });
+      setExported(dataUrl);
+      const a = document.createElement('a');
+      a.download = `${profile.characterName || 'ffxiv-card'}.png`;
+      a.href = dataUrl;
+      a.click();
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: '画像の書き出しに失敗しました。画像を入れ直してもう一度試してください。' });
     } finally {
-      setIsDownloading(false);
+      setIsExporting(false);
     }
   };
 
-  const clearPortraitAt = (index: number) => {
-    setPortraitImages((prev) => {
-      const next = [...prev];
-      next[index] = '';
-      return next;
-    });
+  const resetAll = () => {
+    setProfile(INITIAL_PROFILE);
+    setLevels(emptyLevels());
+    setWeekday(emptyHours());
+    setHoliday(emptyHours());
+    setImages(INITIAL_IMAGES);
+    setLook(INITIAL_LOOK);
   };
 
   return (
     <main className="shell">
+      <header className="page-head">
+        <h1>FFXIV Profile Card</h1>
+        <p>入力するとすぐプレビューに反映されます。最後に「PNGで保存」。</p>
+      </header>
+
       <div className="workspace">
-        <aside className="panel editor">
-          <div className="panel-header">
-            <span className="eyebrow">Profile</span>
-            <h1>カード編集</h1>
-          </div>
-
-          <div className="field-list">
-            <label className="field">
-              <span>キャラクター名</span>
-              <input value={profile.characterName} onChange={(e) => updateProfile('characterName', e.target.value)} />
-            </label>
-
-            <label className="field">
-              <span>メインジョブ</span>
-              <input value={profile.mainJob} onChange={(e) => updateProfile('mainJob', e.target.value)} />
-            </label>
-
-            <div className="two-column">
-              <label className="field">
-                <span>ワールド</span>
-                <input value={profile.world} onChange={(e) => updateProfile('world', e.target.value)} />
-              </label>
-
-              <label className="field">
-                <span>データセンター</span>
-                <input value={profile.datacenter} onChange={(e) => updateProfile('datacenter', e.target.value)} />
-              </label>
-            </div>
-
-            <label className="field">
-              <span>所属FC</span>
-              <input value={profile.fc} onChange={(e) => updateProfile('fc', e.target.value)} />
-            </label>
-
-            <label className="field field-textarea">
-              <span>自己紹介</span>
-              <textarea value={profile.bio} onChange={(e) => updateProfile('bio', e.target.value)} />
-            </label>
-
-            <label className="field">
-              <span>SNSアカウント</span>
-              <input value={profile.xUrl} onChange={(e) => updateProfile('xUrl', e.target.value)} />
-            </label>
-
-            <label className="field">
-              <span>パッチ情報</span>
-              <input value={profile.patch} onChange={(e) => updateProfile('patch', e.target.value)} />
-            </label>
-
-            <label className="field">
-              <span>ハッシュタグ</span>
+        {/* ============ 編集パネル ============ */}
+        <div className="editor">
+          <section className="box">
+            <h2>ロドストから読み込む</h2>
+            <div className="lodestone-row">
               <input
-                value={profile.hashtags.join(', ')}
-                onChange={(e) => updateProfile('hashtags', e.target.value.split(',').map((value) => value.trim()).filter(Boolean))}
-              />
-            </label>
-
-            <div className="two-column">
-              <label className="field">
-                <span>平日</span>
-                <input value={profile.weekdayPlaytime} onChange={(e) => updateProfile('weekdayPlaytime', e.target.value)} />
-              </label>
-
-              <label className="field">
-                <span>休日</span>
-                <input value={profile.weekendPlaytime} onChange={(e) => updateProfile('weekendPlaytime', e.target.value)} />
-              </label>
-            </div>
-          </div>
-
-          <div className="section-box">
-            <div className="section-header">
-              <span className="eyebrow">Lodestone</span>
-              <h2>ジョブレベル自動取得</h2>
-            </div>
-            <div className="lodestone-box">
-              <input
+                id="lodestone-url"
                 value={lodestoneUrl}
                 onChange={(e) => setLodestoneUrl(e.target.value)}
-                placeholder="https://jp.finalfantasyxiv.com/lodestone/character/123456789/"
+                onKeyDown={(e) => e.key === 'Enter' && fetchLodestone()}
+                placeholder="https://jp.finalfantasyxiv.com/lodestone/character/12345678/"
               />
-              <button className="primary" onClick={fetchLodestoneProfile} disabled={isLoading}>
-                {isLoading ? '取得中...' : '取得する'}
+              <button className="primary" onClick={fetchLodestone} disabled={isLoading}>
+                {isLoading ? '読み込み中…' : '読み込む'}
               </button>
             </div>
             <p className={`status ${status.type}`}>{status.message}</p>
-          </div>
+          </section>
 
-          <div className="section-box">
-            <div className="section-header">
-              <span className="eyebrow">Images</span>
-              <h2>画像アップロード</h2>
+          <section className="box">
+            <h2>プロフィール</h2>
+            <Field id="name" label="キャラクター名" value={profile.characterName} onChange={(v) => update('characterName', v)} />
+            <div className="grid3">
+              <Field id="mainjob" label="メインジョブ" value={profile.mainJob} onChange={(v) => update('mainJob', v)} />
+              <Field id="dc" label="データセンター" value={profile.datacenter} onChange={(v) => update('datacenter', v)} />
+              <Field id="world" label="ワールド" value={profile.world} onChange={(v) => update('world', v)} />
             </div>
+            <div className="grid2">
+              <Field id="fclabel" label="小見出し" value={profile.fcLabel} onChange={(v) => update('fcLabel', v)} />
+              <Field id="fc" label="FC名など" value={profile.fc} onChange={(v) => update('fc', v)} />
+            </div>
+            <label className="field" htmlFor="bio">
+              <span>ひとこと</span>
+              <textarea id="bio" value={profile.bio} onChange={(e) => update('bio', e.target.value)} />
+            </label>
+            <Field id="sns" label="SNSなど" value={profile.sns} onChange={(v) => update('sns', v)} />
+          </section>
 
-            <div className="upload-block">
-              <label className="image-label">
-                <span>メイン画像</span>
-                <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'main')} />
+          <section className="box">
+            <h2>ジョブレベル</h2>
+            <p className="hint">空欄は未解放として、カードでは何も表示されません。カンストは金色になります。</p>
+            <LevelInputs jobs={COMBAT_JOBS} levels={levels} onChange={setLevel} />
+            <LevelInputs jobs={OTHER_JOBS} levels={levels} onChange={setLevel} />
+          </section>
+
+          <section className="box">
+            <h2>Patch / PLAY time</h2>
+            <Field id="patch" label="始めたパッチ" value={profile.patch} onChange={(v) => update('patch', v)} />
+            <p className="hint">遊ぶ時間帯をなぞって塗ってください。塗ったマスをなぞると消えます。</p>
+            <HourPicker rows={[['平日', weekday, setWeekday], ['休日', holiday, setHoliday]]} />
+          </section>
+
+          <section className="box">
+            <h2>画像</h2>
+            <div className="grid2">
+              <ImageInput id="img-bg" label="背景（上半分）" has={!!images.background}
+                onPick={(e) => upload(e, 'background')} onClear={() => setImages((p) => ({ ...p, background: '' }))} />
+              <ImageInput id="img-main" label="キャラ画像（右上）" has={!!images.main}
+                onPick={(e) => upload(e, 'main')} onClear={() => setImages((p) => ({ ...p, main: '' }))} />
+            </div>
+            <div className="grid3">
+              <Range id="zoom" label="キャラ 拡大" min={1} max={3} step={0.01} value={look.zoom} onChange={(v) => updateLook('zoom', v)} />
+              <Range id="posx" label="キャラ 左右" min={0} max={100} step={1} value={look.posX} onChange={(v) => updateLook('posX', v)} />
+              <Range id="posy" label="キャラ 上下" min={0} max={100} step={1} value={look.posY} onChange={(v) => updateLook('posY', v)} />
+            </div>
+            <div className="grid3">
+              {([0, 1, 2] as const).map((i) => (
+                <ImageInput key={i} id={`img-p${i}`} label={`丸アイコン ${i + 1}`} has={!!images.portraits[i]}
+                  onPick={(e) => upload(e, i)}
+                  onClear={() => setImages((p) => {
+                    const portraits = [...p.portraits] as Images['portraits'];
+                    portraits[i] = '';
+                    return { ...p, portraits };
+                  })} />
+              ))}
+            </div>
+            <div className="grid2">
+              <Range id="veil" label="左側の白さ" min={0} max={0.85} step={0.01} value={look.veil} onChange={(v) => updateLook('veil', v)} />
+              <label className="field" htmlFor="base">
+                <span>下半分の色</span>
+                <input id="base" type="color" value={look.base} onChange={(e) => updateLook('base', e.target.value)} />
               </label>
-              {mainImage ? (
-                <button type="button" className="ghost" onClick={() => setMainImage('')}>
-                  画像を削除
-                </button>
-              ) : null}
             </div>
+            {storageNote && <p className="hint warn">{storageNote}</p>}
+          </section>
 
-            <div className="portrait-row">
-              {portraitImages.map((image, index) => (
-                <div key={index} className="portrait-slot">
-                  <label className="portrait-upload">
-                    {image ? <img src={image} alt={`portrait-${index}`} /> : <span>+</span>}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      data-index={index}
-                      onChange={(e) => handleImageUpload(e, 'portrait')}
-                    />
-                  </label>
-                  {image ? (
-                    <button type="button" className="ghost small" onClick={() => clearPortraitAt(index)}>
-                      削除
-                    </button>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
+          <section className="box">
+            <h2>タグと表記</h2>
+            <Field id="tags" label="ハッシュタグ（スペース区切り）" value={profile.hashtags} onChange={(v) => update('hashtags', v)} />
+            <Field id="credit" label="権利表記" value={profile.credit} onChange={(v) => update('credit', v)} />
+            <button className="ghost" onClick={resetAll}>すべて空にする</button>
+          </section>
+        </div>
 
-          <div className="section-box">
-            <div className="section-header">
-              <span className="eyebrow">Levels</span>
-              <h2>ジョブレベル一覧</h2>
-            </div>
-
-            <div className="job-grid">
-              {JOB_GROUPS.map((group) => (
-                <div key={group.title} className="job-group">
-                  <h3>{group.title}</h3>
-                  {group.jobs.map((job) => (
-                    <label key={job.id} className="job-row">
-                      <span>{job.name}</span>
-                      <input
-                        type="number"
-                        value={jobs[job.id] ?? 0}
-                        min={0}
-                        max={1000}
-                        onChange={(e) => setJobLevel(job.id, Number(e.target.value || 0))}
-                      />
-                    </label>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        <section className="panel preview-panel">
-          <div className="preview-toolbar">
-            <div>
-              <span className="eyebrow">Preview</span>
-              <h2>カードプレビュー</h2>
-            </div>
-            <button className="primary" onClick={handleDownload} disabled={isDownloading}>
-              {isDownloading ? '保存中...' : 'PNGで保存'}
-            </button>
-          </div>
-
-          <div className="card-frame">
-            <div ref={cardRef} className="card">
-              <div className="card-top">
-                <div className="card-copy">
-                  <div className="name-block">
-                    <span className="tagline">FFXIV Character Card</span>
-                    <h3>{profile.characterName}</h3>
-                  </div>
-
-                  <div className="meta-grid">
-                    <div><span>Primary</span><strong>{profile.mainJob}</strong></div>
-                    <div><span>World</span><strong>{profile.world}</strong></div>
-                    <div><span>Data Center</span><strong>{profile.datacenter}</strong></div>
-                    <div><span>FC</span><strong>{profile.fc}</strong></div>
-                  </div>
-
-                  <p className="bio">{profile.bio}</p>
-
-                  <div className="card-links">
-                    <span>{profile.xUrl}</span>
-                    <span>{profile.patch}</span>
-                  </div>
-                </div>
-
-                <div className="hero-image-wrap">
-                  {mainImage ? (
-                    <img src={mainImage} alt="Character art" className="hero-image" />
-                  ) : (
-                    <div className="hero-placeholder">Main Image</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="card-middle">
-                <div className="mini-portrait-list">
-                  {portraitImages.map((image, index) => (
-                    <div key={index} className="mini-portrait">
-                      {image ? <img src={image} alt={`Portrait ${index + 1}`} /> : <span>{index + 1}</span>}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="level-panel">
-                  <h4>ジョブレベル</h4>
-                  <div className="level-table">
-                    {JOB_GROUPS.map((group) => (
-                      <div key={group.title} className="level-group">
-                        <span className="group-name">{group.title}</span>
-                        {group.jobs.map((job) => (
-                          <div key={job.id} className="level-row">
-                            <span>{job.name}</span>
-                            <strong>{jobs[job.id] ?? 0}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="card-footer">
-                <div className="time-boxes">
-                  <div>
-                    <span>平日</span>
-                    <strong>{profile.weekdayPlaytime}</strong>
-                  </div>
-                  <div>
-                    <span>休日</span>
-                    <strong>{profile.weekendPlaytime}</strong>
-                  </div>
-                </div>
-
-                <div className="tags">
-                  {profile.hashtags.map((tag) => (
-                    <span key={tag}>#{tag}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ============ プレビュー ============ */}
+        <div className="preview">
+          <ScaledCard>
+            <Card ref={cardRef} profile={profile} levels={levels} weekday={weekday} holiday={holiday} images={images} look={look} />
+          </ScaledCard>
+          <button className="primary big" onClick={exportPng} disabled={isExporting}>
+            {isExporting ? '書き出し中…' : 'PNGで保存'}
+          </button>
+          {exported && (
+            <p className="hint">ダウンロードされない場合は、下の画像を長押し（スマホ）か右クリックで保存してください。</p>
+          )}
+          {exported && <img className="exported" src={exported} alt="書き出したカード" />}
+        </div>
       </div>
     </main>
   );
 }
+
+/* ============================== カード ============================== */
+
+type CardProps = {
+  profile: Profile;
+  levels: JobLevels;
+  weekday: boolean[];
+  holiday: boolean[];
+  images: Images;
+  look: Look;
+};
+
+const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, levels, weekday, holiday, images, look }, ref) {
+  // 名前が長いときは自動で文字を小さくする（だいたい 0.5文字幅 × 文字数 が 940px に収まるように）
+  const nameSize = Math.min(104, Math.floor(1880 / Math.max(profile.characterName.length, 1)));
+  const tags = profile.hashtags.split(/\s+/).filter(Boolean);
+
+  return (
+    <div ref={ref} className="card" style={{ '--base': look.base } as React.CSSProperties}>
+      <div className="card-top">
+        {images.background ? <img className="cover" src={images.background} alt="" /> : <div className="cover placeholder-bg" />}
+        <div className="card-char">
+          {images.main ? (
+            <img
+              src={images.main}
+              alt=""
+              style={{
+                objectPosition: `${look.posX}% ${look.posY}%`,
+                transform: `scale(${look.zoom})`,
+                transformOrigin: `${look.posX}% ${look.posY}%`
+              }}
+            />
+          ) : (
+            <div className="placeholder-char">キャラ画像</div>
+          )}
+        </div>
+        <div className="card-veil" style={{ background: `rgba(255,255,255,${look.veil})` }} />
+        <div className="card-text">
+          <div className="c-name" style={{ fontSize: nameSize }}>{profile.characterName}</div>
+          <div className="c-job">{profile.mainJob}</div>
+          <div className="c-dc">{profile.datacenter}</div>
+          <div className="c-dc">{profile.world}</div>
+          <div className="c-fclabel">{profile.fcLabel}</div>
+          <div className="c-fc">{profile.fc}</div>
+          <div className="c-bio">{profile.bio}</div>
+          <div className="c-sns">{profile.sns}</div>
+        </div>
+      </div>
+
+      <div className="card-bottom">
+        <div className="c-portraits">
+          {images.portraits.map((src, i) => (
+            <div key={i} className="c-portrait">
+              {src ? <img src={src} alt="" /> : <span>IMAGE {i + 1}</span>}
+            </div>
+          ))}
+        </div>
+
+        <div className="c-main">
+          <JobTable jobs={COMBAT_JOBS} levels={levels} />
+          <JobTable jobs={OTHER_JOBS} levels={levels} />
+
+          <div className="c-info">
+            <div className="c-patch">
+              <div className="c-label">Patch</div>
+              <div className="c-patch-value">{profile.patch}</div>
+              <div className="c-tags">
+                {tags.map((t, i) => <span key={`${t}-${i}`}>{t.startsWith('#') ? t : `#${t}`}</span>)}
+              </div>
+            </div>
+            <div className="c-time">
+              <div className="c-label">PLAY time</div>
+              <HourBar label="平日" hours={weekday} />
+              <HourBar label="休日" hours={holiday} />
+            </div>
+          </div>
+        </div>
+
+        {profile.credit && <div className="c-credit">{profile.credit}</div>}
+      </div>
+    </div>
+  );
+});
+
+function JobTable({ jobs, levels }: { jobs: JobDef[]; levels: JobLevels }) {
+  return (
+    <div className="c-jobs" style={{ gridTemplateColumns: `repeat(${jobs.length}, 35.5px)` }}>
+      {jobs.map((j) => (
+        <div key={j.id} className="c-job-icon">
+          <img src={`/jobs/${j.id}.png`} alt={j.label} />
+        </div>
+      ))}
+      {jobs.map((j) => {
+        const lv = levels[j.id];
+        return (
+          <div key={j.id} className={`c-job-lv${lv != null && lv >= capOf(j.id) ? ' cap' : ''}`}>
+            {lv ?? ''}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HourBar({ label, hours }: { label: string; hours: boolean[] }) {
+  return (
+    <div className="c-hour-row">
+      <span className="c-hour-label">{label}</span>
+      <div className="c-hour-track">
+        <div className="c-hour-ticks">
+          {[0, 6, 12, 18, 24].map((h) => <span key={h} style={{ left: `${(h / 24) * 100}%` }}>{h}</span>)}
+        </div>
+        <div className="c-hour-cells">
+          {hours.map((on, h) => <i key={h} className={on ? 'on' : ''} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** カードは 1024px で作り、画面幅に合わせて縮小表示する（書き出しは原寸） */
+function ScaledCard({ children }: { children: React.ReactNode }) {
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(0.5);
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setScale(el.clientWidth / CARD_W));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={boxRef} className="card-scaler" style={{ height: CARD_H * scale }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: CARD_W }}>{children}</div>
+    </div>
+  );
+}
+
+/* ============================== 入力部品 ============================== */
+
+function Field({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="field" htmlFor={id}>
+      <span>{label}</span>
+      <input id={id} value={value} onChange={(e) => onChange(e.target.value)} />
+    </label>
+  );
+}
+
+function Range(props: { id: string; label: string; min: number; max: number; step: number; value: number; onChange: (v: number) => void }) {
+  return (
+    <label className="field" htmlFor={props.id}>
+      <span>{props.label}</span>
+      <input id={props.id} type="range" min={props.min} max={props.max} step={props.step} value={props.value}
+        onChange={(e) => props.onChange(Number(e.target.value))} />
+    </label>
+  );
+}
+
+function ImageInput(props: { id: string; label: string; has: boolean; onPick: (e: React.ChangeEvent<HTMLInputElement>) => void; onClear: () => void }) {
+  return (
+    <div className="field">
+      <span>{props.label}</span>
+      <div className="image-input">
+        <label className="ghost small" htmlFor={props.id}>{props.has ? '変更' : '選択'}</label>
+        <input id={props.id} type="file" accept="image/*" onChange={props.onPick} hidden />
+        {props.has && <button type="button" className="ghost small" onClick={props.onClear}>削除</button>}
+      </div>
+    </div>
+  );
+}
+
+function LevelInputs({ jobs, levels, onChange }: { jobs: JobDef[]; levels: JobLevels; onChange: (id: string, v: string) => void }) {
+  return (
+    <div className="level-inputs">
+      {jobs.map((j) => {
+        const lv = levels[j.id];
+        return (
+          <label key={j.id} className={`level-input${lv != null && lv >= capOf(j.id) ? ' cap' : ''}`} htmlFor={`lv-${j.id}`} title={j.label}>
+            <img src={`/jobs/${j.id}.png`} alt="" />
+            <input id={`lv-${j.id}`} inputMode="numeric" value={lv ?? ''} placeholder="-"
+              aria-label={`${j.label}のレベル`} onChange={(e) => onChange(j.id, e.target.value.replace(/\D/g, ''))} />
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+type HourRow = [string, boolean[], React.Dispatch<React.SetStateAction<boolean[]>>];
+
+function HourPicker({ rows }: { rows: HourRow[] }) {
+  const paint = useRef<{ row: number; value: boolean } | null>(null);
+
+  useEffect(() => {
+    const stop = () => (paint.current = null);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+    return () => {
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+    };
+  }, []);
+
+  const set = (row: number, h: number, value: boolean) =>
+    rows[row][2]((prev) => (prev[h] === value ? prev : prev.map((v, i) => (i === h ? value : v))));
+
+  const onMove = (e: React.PointerEvent) => {
+    if (!paint.current) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    const h = el?.dataset?.hour;
+    const r = el?.dataset?.row;
+    if (h != null && r != null && Number(r) === paint.current.row) set(Number(r), Number(h), paint.current.value);
+  };
+
+  return (
+    <div className="hour-picker" onPointerMove={onMove}>
+      <div className="hour-ticks">
+        <span />
+        {Array.from({ length: 24 }, (_, h) => <span key={h}>{h % 6 === 0 ? h : ''}</span>)}
+      </div>
+      {rows.map(([label, hours], r) => (
+        <div key={label} className="hour-row">
+          <span>{label}</span>
+          {hours.map((on, h) => (
+            <button
+              key={h}
+              type="button"
+              data-row={r}
+              data-hour={h}
+              className={on ? 'on' : ''}
+              aria-label={`${label} ${h}時`}
+              aria-pressed={on}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                paint.current = { row: r, value: !on };
+                set(r, h, !on);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  set(r, h, !on);
+                }
+              }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
