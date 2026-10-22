@@ -1,11 +1,12 @@
 /* ===== 編集画面 ===== */
 :root {
-  --bg: #e9eef4;
-  --panel: #ffffff;
-  --ink: #1f2633;
-  --muted: #5d6879;
-  --line: #d3dae4;
-  --accent: #5f7899;
+  --bg: #d5dde7; /* ページの地 */
+  --panel: #ffffff; /* 入力の箱 */
+  --field: #f3f5f8; /* 入力欄 */
+  --ink: #16202e;
+  --muted: #3f4b5c;
+  --line: #9eabbb; /* 線（濃いめ） */
+  --accent: #3f5f86;
   --accent-ink: #ffffff;
   --gold: #c9a24a;
   --error: #b5434b;
@@ -65,31 +66,33 @@ img { max-width: 100%; }
 
 .box {
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(20, 32, 50, 0.12);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.box h2 { margin: 0; font-size: 12px; letter-spacing: 0.14em; color: var(--muted); font-weight: 700; }
+.box h2 { margin: 0 0 2px; font-size: 14px; letter-spacing: 0.08em; color: var(--ink); font-weight: 700; padding-bottom: 8px; border-bottom: 1.5px solid var(--line); }
+.group-title { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
 
 .grid2, .grid3 { display: grid; gap: 10px; }
 .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.field > span { font-size: 12px; color: var(--muted); }
+.field > span { font-size: 12px; color: var(--muted); font-weight: 700; }
 .field input:not([type]), .field textarea, .field select, .lodestone-row input {
   width: 100%;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1.5px solid var(--line);
+  background: var(--field);
   border-radius: 6px;
   padding: 8px 10px;
 }
 .field textarea { min-height: 60px; resize: vertical; }
 .field input[type='range'] { width: 100%; accent-color: var(--accent); }
-.field input[type='color'] { width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 6px; padding: 2px; background: var(--bg); }
+.field input[type='color'] { width: 100%; height: 36px; border: 1.5px solid var(--line); border-radius: 6px; padding: 2px; background: var(--field); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .hint { margin: 0; font-size: 12px; color: var(--muted); }
@@ -108,7 +111,7 @@ button, .ghost { cursor: pointer; }
 .primary:disabled { opacity: 0.6; cursor: wait; }
 .primary.big { padding: 13px; font-size: 16px; }
 .ghost {
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   background: transparent;
   border-radius: 6px;
   padding: 7px 12px;
@@ -123,7 +126,7 @@ button, .ghost { cursor: pointer; }
 .status.error { color: var(--error); }
 
 /* 「調べ方」の折りたたみ説明 */
-.help { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13px; display: flex; flex-direction: column; }
+.help { border-top: 1.5px solid var(--line); padding-top: 8px; font-size: 13px; display: flex; flex-direction: column; }
 .help summary { cursor: pointer; color: var(--accent); font-weight: 700; font-size: 13px; }
 .help[open] summary { margin-bottom: 10px; }
 .help a { color: var(--accent); }
@@ -171,10 +174,10 @@ button, .ghost { cursor: pointer; }
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: 6px;
   padding: 5px 3px 3px;
-  background: var(--bg);
+  background: var(--field);
 }
 .level-input img { width: 24px; height: 24px; }
 .level-input input {
@@ -197,8 +200,8 @@ button, .ghost { cursor: pointer; }
 .hour-cells button {
   height: 28px;
   min-width: 0;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1.5px solid var(--line);
+  background: var(--field);
   border-radius: 3px;
   padding: 0;
   font-size: 9px;
@@ -217,15 +220,15 @@ button, .ghost { cursor: pointer; }
 .tag-picker { gap: 8px; }
 .tag-selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; align-items: center; }
 .tag-add { display: flex; gap: 8px; }
-.tag-add input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 8px 10px; }
+.tag-add input { flex: 1; min-width: 0; border: 1.5px solid var(--line); background: var(--field); border-radius: 6px; padding: 8px 10px; }
 .tag-list summary { cursor: pointer; font-size: 12px; color: var(--accent); font-weight: 700; }
 .tag-list[open] summary { margin-bottom: 8px; }
 .tag-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
 .tag-group-title { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1.5px solid var(--line);
+  background: var(--field);
   border-radius: 999px;
   padding: 5px 11px;
   font-size: 13px;
@@ -245,9 +248,9 @@ button, .ghost { cursor: pointer; }
   overflow: hidden;
   width: 96px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--field);
   cursor: pointer;
 }
 .thumb.round { width: 52px; border-radius: 50%; }
@@ -322,7 +325,7 @@ button, .ghost { cursor: pointer; }
   overflow: hidden;
   background: #fff;
   color: #141414;
-  font-family: var(--display);
+  font-family: var(--card-display, var(--display));
 }
 .card img { max-width: none; display: block; }
 
@@ -381,6 +384,7 @@ button, .ghost { cursor: pointer; }
 }
 
 
+.c-jobs-row { display: flex; gap: 16px; align-items: flex-start; }
 .c-main { position: absolute; left: 222px; top: 35px; right: 30px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
 
 .c-jobs {
