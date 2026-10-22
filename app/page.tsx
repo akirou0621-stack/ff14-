@@ -18,6 +18,9 @@ const PATCH_GROUPS: { title: string; patches: string[] }[] = [
 ];
 const PATCH_OPTIONS = PATCH_GROUPS.flatMap((g) => g.patches.map((p) => `${p} ${g.title}`));
 
+/** 権利表記（カードに必ず入る。画面からは変更できない） */
+const CREDIT = '© SQUARE ENIX';
+
 /** よく使われるハッシュタグ（ジャンルごと）。増やしたいときはここに足す */
 const TAG_GROUPS: { title: string; tags: string[] }[] = [
   {
@@ -82,7 +85,6 @@ type Profile = {
   sns: string;
   patch: string;
   hashtags: string;
-  credit: string;
 };
 
 /** 画像と、その表示位置（拡大率・位置はカードでもプレビューでも共通） */
@@ -119,8 +121,7 @@ const INITIAL_PROFILE: Profile = {
   bio: 'よろしくお願いします。',
   sns: 'X : @your_id',
   patch: '6.0 暁月のフィナーレ',
-  hashtags: '#雑談 #コンテンツルーレット #麻雀 #SS #ミラプリ',
-  credit: '© SQUARE ENIX'
+  hashtags: '#雑談 #コンテンツルーレット #麻雀 #SS #ミラプリ'
 };
 
 const INITIAL_LEVELS: JobLevels = {
@@ -534,9 +535,8 @@ export default function Home() {
           </section>
 
           <section className="box">
-            <h2>タグと表記</h2>
+            <h2>ハッシュタグ</h2>
             <HashtagPicker value={profile.hashtags} onChange={(v) => update('hashtags', v)} />
-            <Field id="credit" label="権利表記" value={profile.credit} onChange={(v) => update('credit', v)} />
             <button className="ghost" onClick={resetAll}>すべて空にする</button>
           </section>
         </div>
@@ -655,7 +655,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(function Card({ profile, leve
           </div>
         </div>
 
-        {profile.credit && <div className="c-credit">{profile.credit}</div>}
+        <div className="c-credit">{CREDIT}</div>
       </div>
     </div>
   );
