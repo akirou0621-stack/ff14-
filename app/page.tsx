@@ -19,6 +19,32 @@ const PATCH_GROUPS: { title: string; patches: string[] }[] = [
 const PATCH_OPTIONS = PATCH_GROUPS.flatMap((g) => g.patches.map((p) => `${p} ${g.title}`));
 const LEGACY_PATCH = '旧FF14（1.x）';
 
+/** よく使われるハッシュタグ（ジャンルごと）。増やしたいときはここに足す */
+const TAG_GROUPS: { title: string; tags: string[] }[] = [
+  {
+    title: 'コンテンツ',
+    tags: ['ストーリー', 'コンテンツルーレット', '零式', '絶', '極', '高難易度', 'ディープダンジョン', 'PvP', 'クリコン', 'フロントライン',
+      'リスキーモブ', '宝の地図', 'ボズヤ', 'エウレカ', '青魔', 'ゴールドソーサー', '麻雀', 'アチーブ']
+  },
+  {
+    title: '生活・趣味',
+    tags: ['ギャザクラ', 'クラフター', 'ギャザラー', '釣り', 'ヌシ釣り', '金策', 'ハウジング', 'ミラプリ', 'SS', 'グルポ', 'ミニオン',
+      'マウント集め', '演奏', 'ダンス', 'RP', 'サブキャラ']
+  },
+  {
+    title: 'プレイスタイル',
+    tags: ['雑談', 'VC', 'まったり', 'エンジョイ勢', 'ガチ勢', 'ソロ', '初心者', '復帰勢', '社会人', '学生', '夜型', '朝活']
+  },
+  {
+    title: '募集',
+    tags: ['フレンド募集', 'FC募集', '固定募集', 'お手伝いします']
+  }
+];
+
+/** "#雑談 #SS" のような文字列 ⇔ タグの配列 */
+const splitTags = (text: string) => text.split(/\s+/).map((t) => t.replace(/^#+/, '')).filter(Boolean);
+const joinTags = (tags: string[]) => tags.map((t) => `#${t}`).join(' ');
+
 /** 下半分の色の候補 */
 const BASE_PALETTE: { name: string; color: string }[] = [
   { name: 'くすみブルー', color: '#86a2c0' },
@@ -491,7 +517,7 @@ export default function Home() {
 
           <section className="box">
             <h2>タグと表記</h2>
-            <Field id="tags" label="ハッシュタグ（スペース区切り）" value={profile.hashtags} onChange={(v) => update('hashtags', v)} />
+            <HashtagPicker value={profile.hashtags} onChange={(v) => update('hashtags', v)} />
             <Field id="credit" label="権利表記" value={profile.credit} onChange={(v) => update('credit', v)} />
             <button className="ghost" onClick={resetAll}>すべて空にする</button>
           </section>
@@ -740,6 +766,67 @@ function ImageInput(props: {
           {props.image && <button type="button" className="ghost small" onClick={props.onClear}>削除</button>}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** ハッシュタグ：一覧から選ぶ＋自分で書いて追加 */
+function HashtagPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [draft, setDraft] = useState('');
+  const tags = splitTags(value);
+
+  const toggle = (tag: string) => onChange(joinTags(tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag]));
+  const remove = (tag: string) => onChange(joinTags(tags.filter((t) => t !== tag)));
+  const addDraft = () => {
+    // 空白や#は取り除いて1つのタグにする（複数まとめて書いたときは分けて追加）
+    const add = splitTags(draft.replace(/[、,，]/g, ' ')).filter((t) => !tags.includes(t));
+    if (add.length) onChange(joinTags([...tags, ...add]));
+    setDraft('');
+  };
+
+  return (
+    <div className="field tag-picker">
+      <span>ハッシュタグ（カードに出る順番は選んだ順です）</span>
+      <div className="tag-selected" aria-live="polite">
+        {tags.length === 0 && <span className="hint">まだ選ばれていません</span>}
+        {tags.map((t) => (
+          <button key={t} type="button" className="chip on" onClick={() => remove(t)} aria-label={`#${t} を外す`}>
+            #{t}<span aria-hidden="true">×</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="tag-add">
+        <input
+          id="tag-draft"
+          value={draft}
+          placeholder="自由に書く（例：うさぎ好き）"
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              addDraft();
+            }
+          }}
+        />
+        <button type="button" className="primary" onClick={addDraft} disabled={!draft.trim()}>追加</button>
+      </div>
+
+      <details className="tag-list" open>
+        <summary>よく使われるタグから選ぶ</summary>
+        {TAG_GROUPS.map((g) => (
+          <div key={g.title} className="tag-group">
+            <span className="tag-group-title">{g.title}</span>
+            <div className="chips">
+              {g.tags.map((t) => (
+                <button key={t} type="button" className={`chip${tags.includes(t) ? ' on' : ''}`} aria-pressed={tags.includes(t)} onClick={() => toggle(t)}>
+                  #{t}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </details>
     </div>
   );
 }
