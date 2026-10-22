@@ -123,29 +123,46 @@ button, .ghost { cursor: pointer; }
 .status.error { color: var(--error); }
 
 /* 「調べ方」の折りたたみ説明 */
-.help { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13px; }
+.help { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13px; display: flex; flex-direction: column; }
 .help summary { cursor: pointer; color: var(--accent); font-weight: 700; font-size: 13px; }
-.help ol { margin: 10px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; line-height: 1.6; }
+.help[open] summary { margin-bottom: 10px; }
 .help a { color: var(--accent); }
-.addr {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #2b313b;
-  color: #e7ebf1;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  font-size: 13px;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-.addr-lock { font-size: 11px; opacity: 0.7; }
-.addr mark { background: transparent; color: #ffb4b4; outline: 2px solid #e5484d; outline-offset: 2px; border-radius: 2px; }
-.addr-note { margin: 6px 0 0; font-size: 12px; color: #c4434b; font-weight: 700; }
+.help-lead { margin: 0 0 12px; line-height: 1.7; border-left: 3px solid var(--line); padding-left: 10px; }
 
-.image-input { display: flex; gap: 6px; flex-wrap: wrap; }
+/* ブラウザ画面の見本 */
+.browser { background: #1e2229; border-radius: 8px; overflow: hidden; position: relative; margin-bottom: 10px; max-width: 460px; }
+.browser-tabs { display: flex; align-items: center; gap: 12px; padding: 8px 10px 0; }
+.browser-dots { display: flex; gap: 6px; }
+.browser-dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.browser-dots i:nth-child(2) { background: #febc2e; }
+.browser-dots i:nth-child(3) { background: #28c840; }
+.browser-tab {
+  background: #2f3540;
+  color: #d6dbe3;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px 6px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.browser-bar { background: #2f3540; padding: 8px 10px; }
+.browser-url {
+  display: block;
+  background: #1a1d23;
+  color: #c9ced6;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+.browser-url mark { background: transparent; color: #fff; outline: 2.5px solid #ff3b30; outline-offset: 2px; }
+.browser-callout { position: absolute; right: 14px; top: 86px; color: #ff3b30; font-weight: 800; font-size: 18px; text-shadow: 0 1px 0 #fff, 0 0 4px #fff; }
+.browser-page { background: #f2f3f5; color: #555; font-size: 11px; display: flex; gap: 6px; padding: 26px 12px 10px; }
+
 
 /* ジョブレベル入力 */
 .level-inputs { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 5px; }
@@ -172,13 +189,95 @@ button, .ghost { cursor: pointer; }
 .level-input.cap { border-color: var(--gold); }
 .level-input.cap input { color: var(--gold); font-weight: 700; }
 
-/* プレイ時間 */
-.hour-picker { display: flex; flex-direction: column; gap: 3px; user-select: none; touch-action: none; overflow-x: auto; }
-.hour-ticks, .hour-row { display: grid; grid-template-columns: 40px repeat(24, minmax(10px, 1fr)); gap: 2px; align-items: center; }
-.hour-ticks span { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.hour-row > span { font-size: 12px; color: var(--muted); }
-.hour-row button { height: 26px; border: 1px solid var(--line); background: var(--bg); border-radius: 3px; padding: 0; }
-.hour-row button.on { background: #8b9099; border-color: #6c717a; }
+/* プレイ時間（スマホでは12マス×2段になる） */
+.hour-picker { display: flex; flex-direction: column; gap: 8px; user-select: none; touch-action: none; }
+.hour-day { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 6px; align-items: center; }
+.hour-label { font-size: 12px; color: var(--muted); }
+.hour-cells { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; }
+.hour-cells button {
+  height: 28px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 3px;
+  padding: 0;
+  font-size: 9px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.hour-cells button.on { background: #8b9099; border-color: #6c717a; color: #fff; }
+@media (max-width: 640px) {
+  .hour-day { align-items: start; }
+  .hour-label { padding-top: 8px; }
+  .hour-cells { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; }
+  .hour-cells button { height: 34px; font-size: 11px; }
+}
+
+/* 画像の選択欄 */
+.image-input { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.image-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.thumb {
+  position: relative;
+  overflow: hidden;
+  width: 96px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: pointer;
+}
+.thumb.round { width: 52px; border-radius: 50%; }
+
+/* 画像の位置調整画面 */
+.adj-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(10, 14, 20, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.adj-panel {
+  background: var(--panel);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 100%;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.adj-panel h3 { margin: 0; font-size: 15px; }
+.adj-stage {
+  position: relative;
+  overflow: hidden;
+  background: #14171c;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  padding-block: 32px;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.adj-stage:active { cursor: grabbing; }
+.adj-frame { position: relative; }
+.adj-frame img { pointer-events: none; }
+.adj-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.6);
+  outline: 2px solid #fff;
+  pointer-events: none;
+}
+.adj-frame.round { border-radius: 50%; }
+.adj-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.adj-actions .spacer { flex: 1; }
 
 .card-scaler { width: 100%; overflow: hidden; border-radius: 6px; box-shadow: 0 6px 30px rgba(20, 30, 50, 0.18); }
 .exported { width: 100%; border-radius: 6px; }
@@ -204,7 +303,7 @@ button, .ghost { cursor: pointer; }
 .card img { max-width: none; display: block; }
 
 .card-top { position: absolute; inset: 0 0 auto 0; height: 585px; overflow: hidden; }
-.card-top .cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.card-top .cover { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
 .placeholder-bg {
   background:
     radial-gradient(circle at 20% 30%, #f7c1d4 0 8%, transparent 9%),
@@ -254,8 +353,9 @@ button, .ghost { cursor: pointer; }
   color: #93a1b5;
   font-family: var(--mincho);
   font-size: 18px;
+  position: relative;
 }
-.c-portrait img { width: 100%; height: 100%; object-fit: cover; }
+
 
 .c-main { position: absolute; left: 222px; top: 35px; right: 30px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
 
@@ -286,7 +386,7 @@ button, .ghost { cursor: pointer; }
 .c-label { font-size: 32px; color: #fff; text-shadow: 0 1px 6px rgba(40, 60, 90, 0.45); }
 .c-patch { width: 270px; }
 .c-patch-value { font-family: var(--mincho); color: #fff; font-size: 24px; margin: 6px 0 0 4px; text-shadow: 0 1px 6px rgba(40, 60, 90, 0.45); }
-.c-tags { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mincho); font-size: 20px; color: #1d2a3b; max-width: 330px; }
+.c-tags { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mincho); font-size: 20px; color: #fff; text-shadow: 0 1px 4px rgba(40, 60, 90, 0.5); max-width: 330px; }
 
 .c-time { flex: 1; }
 .c-hour-row { display: flex; align-items: flex-end; gap: 10px; margin-top: 8px; }
