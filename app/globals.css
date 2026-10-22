@@ -180,6 +180,7 @@ button, .ghost { cursor: pointer; }
   background: var(--field);
 }
 .level-input img { width: 24px; height: 24px; }
+.level-input img.tile { width: 30px; height: 30px; margin-block: -3px; }
 .level-input input {
   width: 100%;
   border: 0;
@@ -397,6 +398,7 @@ button, .ghost { cursor: pointer; }
 }
 .c-job-icon { background: #e9ecf0; display: grid; place-items: center; }
 .c-job-icon img { width: 26px; height: 26px; }
+.c-job-icon img.tile { width: 33px; height: 33px; }
 .c-job-lv {
   background: var(--base);
   display: grid;

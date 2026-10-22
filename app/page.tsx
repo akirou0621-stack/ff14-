@@ -696,12 +696,39 @@ function useFitText<T extends HTMLElement>(text: string, max: number, min: numbe
   return ref;
 }
 
+/**
+ * ジョブアイコン。
+ * public/icons/ に「ジョブID.png」があればそれを使い（マスいっぱいに表示）、
+ * なければ public/jobs/ の元のアイコンを使う。
+ * → 友達が icons フォルダに画像を入れるだけで、コードを触らずに差し替わる。
+ */
+function JobIcon({ id, alt }: { id: string; alt: string }) {
+  const [custom, setCustom] = useState(true);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
+  // ページの表示が早すぎて読み込み失敗を見逃したときのための確認
+  useEffect(() => {
+    const img = imgRef.current;
+    if (custom && img && img.complete && img.naturalWidth === 0) setCustom(false);
+  }, [custom]);
+
+  return (
+    <img
+      ref={imgRef}
+      src={custom ? `/icons/${id}.png` : `/jobs/${id}.png`}
+      alt={alt}
+      className={custom ? 'tile' : undefined}
+      onError={() => setCustom(false)}
+    />
+  );
+}
+
 function JobTable({ jobs, levels }: { jobs: JobDef[]; levels: JobLevels }) {
   return (
     <div className="c-jobs" style={{ gridTemplateColumns: `repeat(${jobs.length}, 35.5px)` }}>
       {jobs.map((j) => (
         <div key={j.id} className="c-job-icon">
-          <img src={`/jobs/${j.id}.png`} alt={j.label} />
+          <JobIcon id={j.id} alt={j.label} />
         </div>
       ))}
       {jobs.map((j) => {
@@ -993,7 +1020,7 @@ function LevelInputs({ jobs, levels, onChange }: { jobs: JobDef[]; levels: JobLe
         const lv = levels[j.id];
         return (
           <label key={j.id} className={`level-input${lv != null && lv >= capOf(j.id) ? ' cap' : ''}`} htmlFor={`lv-${j.id}`} title={j.label}>
-            <img src={`/jobs/${j.id}.png`} alt="" />
+            <JobIcon id={j.id} alt="" />
             <input id={`lv-${j.id}`} inputMode="numeric" value={lv ?? ''} placeholder="-"
               aria-label={`${j.label}のレベル`} onChange={(e) => onChange(j.id, e.target.value.replace(/\D/g, ''))} />
           </label>
