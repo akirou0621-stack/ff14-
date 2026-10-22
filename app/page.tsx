@@ -47,7 +47,7 @@ const TAG_GROUPS: { title: string; tags: string[] }[] = [
 const splitTags = (text: string) => text.split(/\s+/).map((t) => t.replace(/^#+/, '')).filter(Boolean);
 const joinTags = (tags: string[]) => tags.map((t) => `#${t}`).join(' ');
 
-/** 上半分の文字のフォント（どれも Google Fonts の無料フォント。日本語はしっぽり明朝になる） */
+/** カード全体の文字のフォント（どれも Google Fonts の無料フォント。日本語はしっぽり明朝になる） */
 const TOP_FONTS: { id: string; name: string; family: string }[] = [
   { id: 'playfair', name: 'Playfair Display（雑誌の表紙風・おすすめ）', family: "'Playfair Display'" },
   { id: 'didot', name: 'GFS Didot（Didot系・上品）', family: "'GFS Didot'" },
@@ -108,7 +108,7 @@ const BG_ASPECT = 1024 / 585;
 type Look = {
   veil: number; // 文字の後ろの白い背景の濃さ
   base: string; // 下半分の色
-  font: string; // 上半分の文字のフォント（TOP_FONTS の id）
+  font: string; // カード全体の文字のフォント（TOP_FONTS の id）
 };
 
 const INITIAL_PROFILE: Profile = {
@@ -504,7 +504,7 @@ export default function Home() {
               ))}
             </div>
             <label className="field" htmlFor="topfont">
-              <span>上半分の文字のフォント</span>
+              <span>カードの文字のフォント</span>
               <select id="topfont" value={look.font} onChange={(e) => updateLook('font', e.target.value)}>
                 {TOP_FONTS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
